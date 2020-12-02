@@ -7,9 +7,10 @@
 	Scripted by:		SOFTSERVE\alevc
 */
 -- ===================================================================================================================================================
-
+SET NOCOUNT ON;
 PRINT 'Populating data into [Master].[EmployeePositions]';
 
+-- Populate only an empty table:
 IF NOT EXISTS (SELECT TOP 1 * FROM [Master].[EmployeePositions])
 BEGIN
 	INSERT INTO [Master].[EmployeePositions] (Title, Description)
