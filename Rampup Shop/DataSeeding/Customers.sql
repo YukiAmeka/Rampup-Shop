@@ -8,9 +8,10 @@
 	Tools:				Values for fields FirstName, LastName, Email, & Phone generated using https://www.generatedata.com/
 */
 -- ===================================================================================================================================================
-
+SET NOCOUNT ON;
 PRINT 'Populating data into [Master].[Customers]';
 
+-- Populate only an empty table:
 IF NOT EXISTS (SELECT TOP 1 * FROM [Master].[Customers])
 BEGIN
 	INSERT INTO [Master].[Customers] (FirstName, LastName, Email, Phone) 

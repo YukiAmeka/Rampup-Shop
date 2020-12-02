@@ -8,12 +8,16 @@
 -- ===================================================================================================================================================
 SET NOCOUNT ON;
 PRINT 'Populating data into [Master].[CustomerAddresses]';
+
+-- Populate only an empty table:
 IF NOT EXISTS (SELECT TOP 1 * FROM [Master].[CustomerAddresses])
 BEGIN
 	DECLARE @AddressesNumber INT = (SELECT MAX(AddressId) FROM [Master].[Addresses]),
 		@AddressCounter INT = (SELECT MIN(AddressId) FROM [Master].[Addresses]),
 		@CustomersNumber INT = (SELECT MAX(CustomerId) FROM [Master].[Customers]),
 		@CustomersCounter INT = (SELECT MIN(CustomerId) FROM [Master].[Customers])
+	
+	-- Connect every 3rd and 4th customer with an address until run out of customers or addresses. Every 12th customer gets 2 addresses
 	WHILE @AddressCounter <= @AddressesNumber AND @CustomersCounter <= @CustomersNumber
 	BEGIN
 		IF @CustomersCounter % 3 = 0 
@@ -34,7 +38,5 @@ BEGIN
 		END
 		SET @CustomersCounter += 1;
 	END
-	DELETE FROM [Master].[Addresses]
-		WHERE AddressId >= @AddressCounter;
 END
 GO
