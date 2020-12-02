@@ -85,4 +85,8 @@
   <ItemGroup>
     <None Include="DataSeeding\Customers.sql" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="DataSeeding\Addresses.sql" />
+    <None Include="DataSeeding\CustomerAddresses.sql" />
+  </ItemGroup>
 </Project>

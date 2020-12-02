@@ -14,3 +14,4 @@ Post-Deployment Script Template
 :r .\DataSeeding\Employees.sql
 :r .\DataSeeding\Customers.sql
 :r .\DataSeeding\Addresses.sql
+:r .\DataSeeding\CustomerAddresses.sql

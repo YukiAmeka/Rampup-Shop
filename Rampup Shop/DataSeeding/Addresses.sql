@@ -3,13 +3,15 @@
 	Table's data:		[Master].[Addresses]
 	Short description:	Post-deployment data seeding into the table
 	Created on:			2020-12-01
+	Modified on:		2020-12-02
 	Scripted by:		SOFTSERVE\alevc
 	Tools:				Values for fields Country, City, Zip, & StreetAddress generated using https://www.generatedata.com/
 */
 -- ===================================================================================================================================================
-
+SET NOCOUNT ON;
 PRINT 'Populating data into [Master].[Addresses]';
 
+-- Populate only an empty table:
 IF NOT EXISTS (SELECT TOP 1 * FROM [Master].[Addresses])
 BEGIN
 	INSERT INTO [Master].[Addresses] (Country, City, Zip, StreetAddress) 
