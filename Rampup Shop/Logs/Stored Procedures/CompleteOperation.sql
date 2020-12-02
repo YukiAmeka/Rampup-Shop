@@ -1,18 +1,16 @@
 ﻿CREATE PROCEDURE [Logs].[CompleteOperation]
 	@OperationRunId INT,
-	@AffectedRows INT,
-	@Message VARCHAR(MAX)
+	@AffectedRows INT = NULL,
+	@Message VARCHAR(MAX) = NULL
 AS
 BEGIN
 	SET NOCOUNT ON;
 	BEGIN TRY
-		DECLARE @EndTime DATETIME = CURRENT_TIMESTAMP,
-			@Status VARCHAR(10) = 'Success';
 		UPDATE [Logs].[OperationRuns]
-			SET EndTime = @EndTime,
-				Status = @Status,
+			SET EndTime = CURRENT_TIMESTAMP,
+				Status = 'Success',
 				AffectedRows = @AffectedRows,
-				Message = @Message
+				Message = CONCAT(Message, @Message)
 			WHERE OperationRunId = @OperationRunId;
 		RETURN 0
 	END TRY
