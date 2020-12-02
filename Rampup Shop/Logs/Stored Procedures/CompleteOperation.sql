@@ -8,7 +8,7 @@
 -- ===================================================================================================================================================
 
 CREATE PROCEDURE [Logs].[CompleteOperation]
-	@OperationRunId INT,
+	@OperationRunId INT = NULL,
 	@AffectedRows INT = NULL,
 	@Message VARCHAR(MAX) = NULL
 AS

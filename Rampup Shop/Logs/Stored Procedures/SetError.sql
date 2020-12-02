@@ -1,24 +1,26 @@
 ﻿-- ===================================================================================================================================================
 /*
-	Table's data:		[Logs].[OperationRuns]
-	Short description:	Records an operation start
+	Table's data:		[Logs].[Errors]
+	Short description:	Records error details
 	Created on:			2020-12-02
 	Scripted by:		SOFTSERVE\alevc
 */
 -- ===================================================================================================================================================
 
-CREATE PROCEDURE [Logs].[StartOperation]
-	@OperationId INT = NULL,
-	@CallingUser VARCHAR(50) = NULL,
+CREATE PROCEDURE [Logs].[SetError]
+	@OperationRunId INT = NULL,
+	@Number INT = NULL,
+	@Severity TINYINT = NULL,
+	@State TINYINT = NULL,
 	@CallingProc VARCHAR(100) = NULL,
-	@OperationRunId INT OUTPUT
+	@Line INT = NULL,
+	@Message VARCHAR(MAX) = NULL
 AS
 BEGIN
 	SET NOCOUNT ON;
 	BEGIN TRY
-		INSERT INTO [Logs].[OperationRuns] (OperationId, CallingUser, CallingProc, StartTime, Status)
-			VALUES (@OperationId, @CallingUser, @CallingProc, CURRENT_TIMESTAMP, 'Running');
-		SET @OperationRunId = SCOPE_IDENTITY;
+		INSERT INTO [Logs].[Errors] (OperationRunId, Number, Severity, State, CallingProc, Line, Message, DateTime)
+			VALUES (@OperationRunId, @Number, @Severity, @State, @CallingProc, @Line, @Message, CURRENT_TIMESTAMP);
 		RETURN 0
 	END TRY
 	BEGIN CATCH
