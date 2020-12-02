@@ -1,4 +1,13 @@
-﻿CREATE PROCEDURE [Logs].[StartOperation]
+﻿-- ===================================================================================================================================================
+/*
+	Table's data:		[Logs].[OperationRuns]
+	Short description:	Records an operation start
+	Created on:			2020-12-02
+	Scripted by:		SOFTSERVE\alevc
+*/
+-- ===================================================================================================================================================
+
+CREATE PROCEDURE [Logs].[StartOperation]
 	@OperationId INT = NULL,
 	@CallingUser VARCHAR(50) = NULL,
 	@CallingProc VARCHAR(50) = NULL,

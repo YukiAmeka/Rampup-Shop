@@ -61,6 +61,9 @@
     <Folder Include="Master" />
     <Folder Include="Master\Tables" />
     <Folder Include="Security" />
+    <Folder Include="Logs" />
+    <Folder Include="Logs\Stored Procedures" />
+    <Folder Include="Logs\Tables" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DataSeeding\EmployeePositions.sql" />
@@ -88,5 +91,13 @@
   <ItemGroup>
     <None Include="DataSeeding\Addresses.sql" />
     <None Include="DataSeeding\CustomerAddresses.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <Build Include="Logs\Stored Procedures\CompleteOperation.sql" />
+    <Build Include="Logs\Stored Procedures\StartOperation.sql" />
+    <Build Include="Logs\Tables\Errors.sql" />
+    <Build Include="Logs\Tables\Events.sql" />
+    <Build Include="Logs\Tables\OperationRuns.sql" />
+    <Build Include="Logs\Tables\Operations.sql" />
   </ItemGroup>
 </Project>
