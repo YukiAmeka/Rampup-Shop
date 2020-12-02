@@ -1,8 +1,8 @@
 ﻿CREATE TABLE [Master].[Addresses]
 (
-	[AddressId] INT IDENTITY NOT NULL PRIMARY KEY, 
+	[AddressId] INT NOT NULL IDENTITY CONSTRAINT PK_Master_AddressId PRIMARY KEY,
     [Country] VARCHAR(50) NOT NULL, 
     [City] VARCHAR(50) NOT NULL, 
-    [Zip] VARCHAR(10) NULL, 
+    [Zip] VARCHAR(20) NULL, 
     [StreetAddress] VARCHAR(50) NOT NULL
 )
