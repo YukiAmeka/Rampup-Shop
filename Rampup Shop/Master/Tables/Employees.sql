@@ -6,6 +6,6 @@
     [PasswordHash] VARCHAR (50)  NULL,
     [EmployeePositionId] INT NOT NULL CONSTRAINT FK_Employees_EmployeePositions_EmployeePositionId FOREIGN KEY REFERENCES [Master].[EmployeePositions] ([EmployeePositionId]),
     [DateHired] DATE NOT NULL,
-    [DateFired] DATE NOT NULL
+    [DateFired] DATE NOT NULL DEFAULT ('2999-12-31')
 );
 

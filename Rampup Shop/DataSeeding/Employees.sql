@@ -14,9 +14,9 @@ PRINT 'Populating data into [Master].[Employees]';
 IF NOT EXISTS (SELECT TOP 1 * FROM [Master].[Employees])
 BEGIN
 	INSERT INTO [Master].[Employees] (FirstName, LastName, Email, EmployeePositionId, DateHired, DateFired)
-	VALUES ('Katrine', 'Burke', 'kburke@rampupshop.com', 1, '2020-01-02', '2999-12-31'),
-		('Mason', 'Inoue', 'minoue@rampupshop.com', 2, '2020-08-14', '2999-12-31'),
-		('Renata', 'Janusewycz', 'rjanusewycz@rampupshop.com', 2, '2020-05-22', '2999-12-31'),
+	VALUES ('Katrine', 'Burke', 'kburke@rampupshop.com', 1, '2020-01-02', DEFAULT),
+		('Mason', 'Inoue', 'minoue@rampupshop.com', 2, '2020-08-14', DEFAULT),
+		('Renata', 'Janusewycz', 'rjanusewycz@rampupshop.com', 2, '2020-05-22', DEFAULT),
 		('Yannis', 'Aetos', 'yaetos@rampupshop.com', 2, '2020-04-12', '2020-05-22'),
 		('Daina', 'Wilson', 'dwilson@rampupshop.com', 2, '2020-03-04', '2020-03-31'),
 		('Linda', 'Holland', 'lholland@rampupshop.com', 2, '2020-02-18', '2020-08-10'),
