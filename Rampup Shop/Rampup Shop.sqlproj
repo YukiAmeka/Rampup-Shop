@@ -99,5 +99,8 @@
     <Build Include="Logs\Tables\Events.sql" />
     <Build Include="Logs\Tables\OperationRuns.sql" />
     <Build Include="Logs\Tables\Operations.sql" />
+    <Build Include="Logs\Stored Procedures\SetEvent.sql" />
+    <Build Include="Logs\Stored Procedures\SetError.sql" />
+    <Build Include="Logs\Stored Procedures\FailOperation.sql" />
   </ItemGroup>
 </Project>

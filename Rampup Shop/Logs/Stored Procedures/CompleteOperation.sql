@@ -21,6 +21,8 @@ BEGIN
 				AffectedRows = @AffectedRows,
 				Message = CONCAT(Message, @Message)
 			WHERE OperationRunId = @OperationRunId;
+		IF @Message IS NOT NULL
+			PRINT @Message;
 		RETURN 0
 	END TRY
 	BEGIN CATCH
