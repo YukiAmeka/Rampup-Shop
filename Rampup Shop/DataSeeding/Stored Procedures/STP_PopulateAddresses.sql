@@ -9,13 +9,19 @@
 */
 -- ===================================================================================================================================================
 
-CREATE PROCEDURE [DataSeeding].[PopulateAddresses]
+CREATE PROCEDURE [DataSeeding].[STP_PopulateAddresses]
+	@OperationRunId INT = NULL,
 	@AffectedRows INT OUTPUT
 AS
 BEGIN
 	SET NOCOUNT ON;
-	PRINT 'Populating data into [Master].[Addresses]';
+
 	BEGIN TRY
+		-- Log the event
+		EXEC [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
+			@CallingProc = @@PROCID,
+			@Message = 'Populating data into [Master].[Addresses]';
+
 		-- Populate only an empty table:
 		IF NOT EXISTS (SELECT TOP 1 * FROM [Master].[Addresses])
 		BEGIN

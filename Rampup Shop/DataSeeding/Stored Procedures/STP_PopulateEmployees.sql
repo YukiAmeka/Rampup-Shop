@@ -8,13 +8,19 @@
 */
 -- ===================================================================================================================================================
 
-CREATE PROCEDURE [DataSeeding].[PopulateEmployees]
+CREATE PROCEDURE [DataSeeding].[STP_PopulateEmployees]
+	@OperationRunId INT = NULL,
 	@AffectedRows INT OUTPUT
 AS
 BEGIN
 	SET NOCOUNT ON;
-	PRINT 'Populating data into [Master].[Employees]';
+
 	BEGIN TRY
+		-- Log the event
+		EXEC [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
+			@CallingProc = @@PROCID,
+			@Message = 'Populating data into [Master].[Employees]';
+
 		-- Populate only an empty table:
 		IF NOT EXISTS (SELECT TOP 1 * FROM [Master].[Employees])
 		BEGIN

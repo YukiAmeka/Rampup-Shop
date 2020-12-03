@@ -10,4 +10,4 @@ Post-Deployment Script Template
 --------------------------------------------------------------------------------------
 */
 
-:r .\DataSeeding\MasterDataSeeding.sql
+EXEC [DataSeeding].[STP_PopulateMasterData]
