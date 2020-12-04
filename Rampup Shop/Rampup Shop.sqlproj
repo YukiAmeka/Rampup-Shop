@@ -61,9 +61,12 @@
     <Folder Include="Master" />
     <Folder Include="Master\Tables" />
     <Folder Include="Security" />
+    <Folder Include="Logs" />
+    <Folder Include="Logs\Stored Procedures" />
+    <Folder Include="Logs\Tables" />
+    <Folder Include="DataSeeding\Stored Procedures" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="DataSeeding\EmployeePositions.sql" />
     <Build Include="Master\Tables\Addresses.sql" />
     <Build Include="Master\Tables\CustomerAddresses.sql" />
     <Build Include="Master\Tables\Customers.sql" />
@@ -74,7 +77,12 @@
     <Build Include="Security\Master.sql" />
     <Build Include="Security\Reporting.sql" />
     <Build Include="Security\Staging.sql" />
-    <None Include="DataSeeding\Employees.sql" />
+    <Build Include="DataSeeding\Stored Procedures\STP_PopulateAddresses.sql" />
+    <Build Include="DataSeeding\Stored Procedures\STP_PopulateCustomerAddresses.sql" />
+    <Build Include="DataSeeding\Stored Procedures\STP_PopulateCustomers.sql" />
+    <Build Include="DataSeeding\Stored Procedures\STP_PopulateEmployeePositions.sql" />
+    <Build Include="DataSeeding\Stored Procedures\STP_PopulateEmployees.sql" />
+    <Build Include="DataSeeding\Stored Procedures\STP_PopulateMasterData.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment.sql" />
@@ -83,10 +91,15 @@
     <RefactorLog Include="Rampup Shop.refactorlog" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="DataSeeding\Customers.sql" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="DataSeeding\Addresses.sql" />
-    <None Include="DataSeeding\CustomerAddresses.sql" />
+    <Build Include="Logs\Stored Procedures\STP_CompleteOperation.sql" />
+    <Build Include="Logs\Stored Procedures\STP_StartOperation.sql" />
+    <Build Include="Logs\Tables\Errors.sql" />
+    <Build Include="Logs\Tables\Events.sql" />
+    <Build Include="Logs\Tables\OperationRuns.sql" />
+    <Build Include="Logs\Tables\Operations.sql" />
+    <Build Include="Logs\Stored Procedures\STP_SetEvent.sql" />
+    <Build Include="Logs\Stored Procedures\STP_SetError.sql" />
+    <Build Include="Logs\Stored Procedures\STP_FailOperation.sql" />
+    <Build Include="Security\DataSeeding.sql" />
   </ItemGroup>
 </Project>
