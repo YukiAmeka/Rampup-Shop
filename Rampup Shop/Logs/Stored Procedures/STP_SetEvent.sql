@@ -15,12 +15,19 @@ CREATE PROCEDURE [Logs].[STP_SetEvent]
 AS
 BEGIN
 	SET NOCOUNT ON;
+
+	-- Produce a qualified name of the calling procedure based on the passed in @@PROCID
 	DECLARE @CallingProcFullName VARCHAR(255) = QUOTENAME(OBJECT_SCHEMA_NAME(@CallingProc)) + '.' + QUOTENAME(OBJECT_NAME(@CallingProc));
+	
 	BEGIN TRY
 		IF @OperationRunId IS NULL
 			RAISERROR('An event must be part of an operation run', 11, 10);
+
+		-- Log the event
 		INSERT INTO [Logs].[Events] (OperationRunId, CallingProc, Message, DateTime)
 			VALUES (@OperationRunId, @CallingProcFullName, @Message, CURRENT_TIMESTAMP);
+
+		-- Print runtime message to the user if any
 		IF @Message IS NOT NULL
 			PRINT @Message;
 		RETURN 0
@@ -32,6 +39,8 @@ BEGIN
 			@ErrorProcedure VARCHAR(255) = ERROR_PROCEDURE() + ISNULL(' called from ' + @CallingProcFullName, ''), 
 			@ErrorLine INT = ERROR_LINE(), 
 			@ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+		
+		-- Log the error
 		EXEC [Logs].[STP_SetError] @OperationRunId, @ErrorNumber, @ErrorSeverity, @ErrorState, @ErrorProcedure, @ErrorLine, @ErrorMessage;
 		RETURN 1
 	END CATCH

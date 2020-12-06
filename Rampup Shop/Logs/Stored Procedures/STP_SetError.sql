@@ -19,7 +19,9 @@ CREATE PROCEDURE [Logs].[STP_SetError]
 AS
 BEGIN
 	SET NOCOUNT ON;
+
 	BEGIN TRY
+		-- Log the error
 		INSERT INTO [Logs].[Errors] (OperationRunId, Number, Severity, State, CallingProc, Line, Message, DateTime)
 			VALUES (@OperationRunId, @Number, @Severity, @State, @CallingProc, @Line, @Message, CURRENT_TIMESTAMP);
 		RETURN 0
@@ -31,6 +33,8 @@ BEGIN
 			@ErrorProcedure VARCHAR(255) = ERROR_PROCEDURE() + ISNULL(' called from ' + @CallingProc, ''), 
 			@ErrorLine INT = ERROR_LINE(), 
 			@ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+		
+		-- Log the error
 		EXEC [Logs].[STP_SetError] @OperationRunId, @ErrorNumber, @ErrorSeverity, @ErrorState, @ErrorProcedure, @ErrorLine, @ErrorMessage;
 		RETURN 1
 	END CATCH

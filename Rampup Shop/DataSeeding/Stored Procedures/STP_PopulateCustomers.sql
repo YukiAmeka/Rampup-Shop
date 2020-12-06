@@ -15,6 +15,7 @@ CREATE PROCEDURE [DataSeeding].[STP_PopulateCustomers]
 AS
 BEGIN
 	SET NOCOUNT ON;
+
 	DECLARE @SuccessStatus INT,
 		@TargetTable VARCHAR(100) = '[Master].[Customers]';
 
@@ -24,6 +25,7 @@ BEGIN
 		EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
 			@CallingProc = @@PROCID,
 			@Message = @Message;
+
 		IF @SuccessStatus = 1
 			RAISERROR('Event logging has failed. Table %s has not been populated', 12, 25, @TargetTable);
 
@@ -46,8 +48,10 @@ BEGIN
 				('Kelsie','Oneal','at.sem@Aliquam.edu','(0131) 503 3034'),('Germaine','Mullen','ut.dolor@Sedcongue.co.uk','076 1663 3371'),('Kitra','Hunt','iaculis.odio.Nam@fringillapurus.edu','07624 552875'),('John','Gay','tempor.bibendum@acsemut.com','076 3964 7085'),('Idona','Avery','imperdiet.erat@Morbiquisurna.org','070 3576 8067'),('Camden','Potts','montes.nascetur.ridiculus@et.org','0800 741417'),('Latifah','Reed','erat@pedeCras.ca','070 0455 2726'),('Lydia','Foley','commodo@sociosquad.com','07285 156820'),('Mallory','Saunders','tristique@sedfacilisisvitae.com','070 8732 3658'),('Hakeem','England','lorem.lorem.luctus@rutrumnon.co.uk','0936 557 5095'),
 				('Christen','Bright','faucibus@porttitorscelerisqueneque.org','0500 532075'),('Cassidy','Schmidt','Fusce.diam.nunc@Donecluctus.ca','056 2366 9707'),('Judah','Crawford','lorem@Proinnislsem.org','(013125) 41362'),('Mannix','Wolf','placerat.orci.lacus@Proin.net','0800 016299'),('Kuame','Galloway','Mauris.blandit@mollisDuissit.com','0800 1111'),('Lev','Patton','ipsum@dictumProin.net','0500 106529'),('Inez','Faulkner','Donec@arcu.ca','0500 633342'),('Flavia','Stevenson','in@sedhendrerit.com','(016977) 2511'),('Adria','Lott','Curabitur.vel.lectus@magna.com','0374 774 0311'),('Vladimir','Davidson','ligula@accumsanconvallis.net','(01756) 069709'),
 				('Theodore','Vaughan','amet.dapibus.id@Naminterdumenim.edu','0800 040 9671'),('Vivian','Mcgowan','quis.turpis.vitae@liberoMorbiaccumsan.org','(01402) 71476'),('Hadley','Edwards','convallis.est.vitae@magnaa.edu','070 2126 2064'),('Reuben','Maldonado','Sed@Duisacarcu.ca','0863 491 8856'),('Avram','Buckner','dictum@ametrisusDonec.edu','0800 046799'),('Brock','Shields','magnis@Cras.org','0360 415 1122'),('Mari','Barr','et.magna.Praesent@sagittis.net','056 5456 3053'),('Devin','Clay','leo.Cras@nec.edu','0845 46 46'),('Kristen','Stein','leo.Cras.vehicula@diamlorem.net','0845 46 42'),('Jameson','Flowers','imperdiet.dictum@Aliquamvulputate.org','(01730) 324887');
+			
+			-- Output the number of affected rows
+			SET @AffectedRows = @@ROWCOUNT;
 		END
-		SET @AffectedRows = @@ROWCOUNT;
 		RETURN 0
 	END TRY
 	BEGIN CATCH
@@ -57,6 +61,8 @@ BEGIN
 			@ErrorProcedure VARCHAR(255) = ERROR_PROCEDURE(), 
 			@ErrorLine INT = ERROR_LINE(), 
 			@ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+		
+		-- Log the error
 		EXEC [Logs].[STP_SetError] @OperationRunId, @ErrorNumber, @ErrorSeverity, @ErrorState, @ErrorProcedure, @ErrorLine, @ErrorMessage;
 		RETURN 1
 	END CATCH

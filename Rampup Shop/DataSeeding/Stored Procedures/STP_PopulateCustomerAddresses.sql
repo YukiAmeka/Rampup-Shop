@@ -14,6 +14,7 @@ CREATE PROCEDURE [DataSeeding].[STP_PopulateCustomerAddresses]
 AS
 BEGIN
 	SET NOCOUNT ON;
+
 	DECLARE @SuccessStatus INT,
 		@TargetTable VARCHAR(100) = '[Master].[CustomerAddresses]';
 
@@ -23,6 +24,7 @@ BEGIN
 		EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
 			@CallingProc = @@PROCID,
 			@Message = @Message;
+
 		IF @SuccessStatus = 1
 			RAISERROR('Event logging has failed. Table %s has not been populated', 12, 25, @TargetTable);
 
@@ -45,8 +47,10 @@ BEGIN
 			INSERT INTO Master.CustomerAddresses
 			SELECT CustomerId, AddressId FROM CWA
 			JOIN Master.Addresses AS MA ON CWA.Num = MA.AddressId;
+
+			-- Output the number of affected rows
+			SET @AffectedRows = @@ROWCOUNT;
 		END
-		SET @AffectedRows = @@ROWCOUNT;
 		RETURN 0
 	END TRY
 	BEGIN CATCH
@@ -56,6 +60,8 @@ BEGIN
 			@ErrorProcedure VARCHAR(255) = ERROR_PROCEDURE(), 
 			@ErrorLine INT = ERROR_LINE(), 
 			@ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+		
+		-- Log the error
 		EXEC [Logs].[STP_SetError] @OperationRunId, @ErrorNumber, @ErrorSeverity, @ErrorState, @ErrorProcedure, @ErrorLine, @ErrorMessage;
 		RETURN 1
 	END CATCH

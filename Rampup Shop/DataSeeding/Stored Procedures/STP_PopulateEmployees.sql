@@ -14,6 +14,7 @@ CREATE PROCEDURE [DataSeeding].[STP_PopulateEmployees]
 AS
 BEGIN
 	SET NOCOUNT ON;
+
 	DECLARE @SuccessStatus INT,
 		@TargetTable VARCHAR(100) = '[Master].[Employees]';
 
@@ -23,6 +24,7 @@ BEGIN
 		EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
 			@CallingProc = @@PROCID,
 			@Message = @Message;
+
 		IF @SuccessStatus = 1
 			RAISERROR('Event logging has failed. Table %s has not been populated', 12, 25, @TargetTable);
 
@@ -37,8 +39,10 @@ BEGIN
 				('Daina', 'Wilson', 'dwilson@rampupshop.com', 2, '2020-03-04', '2020-03-31'),
 				('Linda', 'Holland', 'lholland@rampupshop.com', 2, '2020-02-18', '2020-08-10'),
 				('Paul', 'Olsson', 'polsson@rampupshop.com', 2, '2020-01-02', '2020-03-05');
+			
+			-- Output the number of affected rows
+			SET @AffectedRows = @@ROWCOUNT;
 		END
-		SET @AffectedRows = @@ROWCOUNT;
 		RETURN 0
 	END TRY
 	BEGIN CATCH
@@ -48,6 +52,8 @@ BEGIN
 			@ErrorProcedure VARCHAR(255) = ERROR_PROCEDURE(), 
 			@ErrorLine INT = ERROR_LINE(), 
 			@ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+		
+		-- Log the error
 		EXEC [Logs].[STP_SetError] @OperationRunId, @ErrorNumber, @ErrorSeverity, @ErrorState, @ErrorProcedure, @ErrorLine, @ErrorMessage;
 		RETURN 1
 	END CATCH

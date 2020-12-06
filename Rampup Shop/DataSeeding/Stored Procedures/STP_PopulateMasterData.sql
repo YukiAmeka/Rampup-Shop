@@ -12,11 +12,12 @@ CREATE PROCEDURE [DataSeeding].[STP_PopulateMasterData]
 AS
 BEGIN
 	SET NOCOUNT ON;
+
 	DECLARE @OperationRunId INT,
 		@AffectedRows INT,
 		@TotalAffectedRows INT = 0,
 		@ProcExecString NVARCHAR(MAX),
-		@ProcName VARCHAR(100),
+		@ProcName VARCHAR(255),
 		@Counter INT = 1,
 		@NumberOfProcs INT,
 		@SuccessStatus INT;
@@ -26,6 +27,7 @@ BEGIN
 		EXEC @SuccessStatus = [Logs].[STP_StartOperation] @CallingProc = @@PROCID,
 			@Message = 'Data seeding is in progress.', 
 			@OperationRunId = @OperationRunId OUTPUT;
+
 		IF @SuccessStatus = 1
 			RAISERROR('Operation start could not be logged. Data seeding has been interrupted', 12, 15);
 
@@ -58,7 +60,7 @@ BEGIN
 			IF @SuccessStatus = 1
 				RAISERROR('Procedure [DataSeeding].%s failed. Operation has been interrupted', 12, 30, @ProcName);
 		
-			SET @TotalAffectedRows += @AffectedRows;
+			SET @TotalAffectedRows += ISNULL(@AffectedRows, 0);
 			SET @Counter += 1;
 		END;
 
@@ -69,6 +71,7 @@ BEGIN
 		EXEC @SuccessStatus = [Logs].[STP_CompleteOperation] @OperationRunId = @OperationRunId,
 			@AffectedRows = @TotalAffectedRows,
 			@Message = 'Tables have been succefully populated with dummy data.';
+		
 		IF @SuccessStatus = 1
 			RAISERROR('Operation completion could not be logged', 9, 15);
 
@@ -81,9 +84,16 @@ BEGIN
 			@ErrorProcedure VARCHAR(255) = ERROR_PROCEDURE(), 
 			@ErrorLine INT = ERROR_LINE(), 
 			@ErrorMessage NVARCHAR(MAX) = ERROR_MESSAGE();
+
+		-- Log the error
 		EXEC [Logs].[STP_SetError] @OperationRunId, @ErrorNumber, @ErrorSeverity, @ErrorState, @ErrorProcedure, @ErrorLine, @ErrorMessage;
+		
+		-- Log operation failure
 		EXEC [Logs].[STP_FailOperation] @OperationRunId, 'Data seeding has failed';
+
+		-- Raiserror to the application
 		RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+
 		RETURN 1
 	END CATCH
 END;
