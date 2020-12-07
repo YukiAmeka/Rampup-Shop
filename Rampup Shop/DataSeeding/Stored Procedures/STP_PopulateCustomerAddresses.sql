@@ -3,7 +3,7 @@
 	Table's data:		[Master].[CustomerAddresses]
 	Short description:	Post-deployment data seeding into the table
 	Created on:			2020-12-02
-	Modified on:		2020-12-04
+	Modified on:		2020-12-07
 	Scripted by:		SOFTSERVE\alevc
 */
 -- ===================================================================================================================================================
@@ -27,6 +27,10 @@ BEGIN
 
 		IF @SuccessStatus = 1
 			RAISERROR('Event logging has failed. Table %s has not been populated', 12, 25, @TargetTable);
+
+		-- Check if table exists
+		IF OBJECT_ID(@TargetTable) IS NULL
+			RAISERROR('Table %s cannot be populated, as it does not exist in this DB', 16, 25, @TargetTable);
 
 		-- Populate only an empty table:
 		IF NOT EXISTS (SELECT TOP 1 * FROM [Master].[CustomerAddresses])
