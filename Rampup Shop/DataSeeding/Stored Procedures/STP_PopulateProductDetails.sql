@@ -32,36 +32,50 @@ BEGIN
 		IF OBJECT_ID(@TargetTable) IS NULL
 			RAISERROR('Table %s cannot be populated, as it does not exist in this DB', 16, 25, @TargetTable);
 
+		-- Record a temporary list of product details (used here & in populating product stocks)
+		DROP TABLE IF EXISTS ##ProductDetails;
+		CREATE TABLE ##ProductDetails (
+			[ProductDetailId] INT NOT NULL IDENTITY(1,1),
+			[Name] VARCHAR(50) NOT NULL,
+			[ProductTypeId] INT NOT NULL,
+			[Description] VARCHAR(255) NULL,
+			[Price] MONEY NOT NULL,
+			[SoldPerWeek] INT NOT NULL
+		);
+		INSERT INTO ##ProductDetails (Name, ProductTypeId, Description, Price, SoldPerWeek)
+			VALUES ('Molokiya Milk', 1, '1L carton package of natural cow milk', 36.25, 150),
+				('Ferma Milk', 1, '1L plastic package of natural cow milk', 32.80, 150),
+				('Bila Liniya Milk', 1, '0.5L plastic package of natural cow milk', 20.50, 75),
+				('Prostokvashyno Milk', 1, '0.5L carton package of natural cow milk', 22.10, 75),
+				('Karpatskyi Bread', 2, 'A loaf of fresh bread made from wholegrain', 15.15, 300),
+				('Zavarnyi Bread', 2, 'A loaf of fresh fluffy sweet bread', 18.70, 300),
+				('Baguette', 2, 'A loaf of fresh baguette', 11.05, 300),
+				('Chicken Breasts', 3, '1kg of chicken breasts', 73.40, 50),
+				('Chicken Wings', 3, '1kg of chicken wings', 69.95, 50),
+				('Chicken Legs', 3, '1kg of chicken legs', 89.75, 50),
+				('Potatoes', 4, '1kg of potatoes', 19.00, 150),
+				('Carrots', 4, '1kg of carrots', 17.35, 150),
+				('Onions', 4, '1kg of white onions', 12.20, 150),
+				('Tomatoes', 4, '1kg of red tomatoes', 15.80, 150),
+				('Broccoli', 4, '1kg of broccoli', 22.50, 150),
+				('Mayo', 5, '100g of mayonnaise', 13.70, 300),
+				('Cheddar Cheese', 6, '100g of packaged cheddar cheese', 73.90, 450),
+				('Parmesan Cheese', 6, '100g of packaged parmesan cheese', 99.90, 150),
+				('Selyanske Butter', 7, '200g of fresh butter', 25.15, 150),
+				('Sambirske Butter', 7, '200g of fresh butter', 28.30, 150),
+				('Prostokvashyno Butter', 7, '200g of fresh butter', 23.85, 150),
+				('Apples', 8, '1kg of yellow apples', 10.45, 150),
+				('Plumes', 8, '1kg of plumes', 17.20, 150),
+				('Grapes', 8, '1kg of green grapes', 28.00, 150),
+				('Pears', 8, '1kg of yellow pears', 34.65, 150),
+				('Oranges', 8, '1kg of oranges', 20.90, 150);
+
 		-- Populate only an empty table:
 		IF NOT EXISTS (SELECT TOP 1 * FROM [Master].[ProductDetails])
 		BEGIN
 			INSERT INTO [Master].[ProductDetails] (Name, ProductTypeId, Description)
-			VALUES ('Molokiya Milk', 1, '1L carton package of natural cow milk'),
-				('Ferma Milk', 1, '1L plastic package of natural cow milk'),
-				('Bila Liniya Milk', 1, '0.5L plastic package of natural cow milk'),
-				('Prostokvashyno Milk', 1, '0.5L carton package of natural cow milk'),
-				('Karpatskyi Bread', 2, 'A loaf of fresh bread made from wholegrain'),
-				('Zavarnyi Bread', 2, 'A loaf of fresh fluffy sweet bread'),
-				('Baguette', 2, 'A loaf of fresh baguette'),
-				('Chicken Breasts', 3, '1kg of chicken breasts'),
-				('Chicken Wings', 3, '1kg of chicken wings'),
-				('Chicken Legs', 3, '1kg of chicken legs'),
-				('Potatoes', 4, '1kg of potatoes'),
-				('Carrots', 4, '1kg of carrots'),
-				('Onions', 4, '1kg of white onions'),
-				('Tomatoes', 4, '1kg of red tomatoes'),
-				('Broccoli', 4, '1kg of broccoli'),
-				('Mayo', 5, '100g of mayonnaise'),
-				('Cheddar Cheese', 6, '100g of packaged cheddar cheese'),
-				('Parmesan Cheese', 6, '100g of packaged parmesan cheese'),
-				('Selyanske Butter', 7, '200g of fresh butter'),
-				('Sambirske Butter', 7, '200g of fresh butter'),
-				('Prostokvashyno Butter', 7, '200g of fresh butter'),
-				('Apples', 8, '1kg of yellow apples'),
-				('Plumes', 8, '1kg of plumes'),
-				('Grapes', 8, '1kg of green grapes'),
-				('Pears', 8, '1kg of yellow pears'),
-				('Oranges', 8, '1kg of oranges');
+			SELECT Name, ProductTypeId, Description 
+			FROM ##ProductDetails;
 			
 			-- Output the number of affected rows
 			SET @AffectedRows = @@ROWCOUNT;

@@ -1,14 +1,14 @@
 ﻿-- ===================================================================================================================================================
 /*
-	Table's data:		[Master].[ProductStocks]
+	Table's data:		[Master].[Versions]
 	Short description:	Post-deployment data seeding into the table
-	Created on:			2020-12-09
-	Modified on:		2020-12-10
+	Created on:			2020-12-10
+	Modified on:		2020-12-11
 	Scripted by:		SOFTSERVE\alevc
 */
 -- ===================================================================================================================================================
 
-CREATE PROCEDURE [DataSeeding].[STP_PopulateProductStocks]
+CREATE PROCEDURE [DataSeeding].[STP_PopulateVersions]
 	@OperationRunId INT = NULL,
 	@AffectedRows INT OUTPUT
 AS
@@ -16,7 +16,7 @@ BEGIN
 	SET NOCOUNT ON;
 
 	DECLARE @SuccessStatus INT,
-		@TargetTable VARCHAR(100) = '[Master].[ProductStocks]';
+		@TargetTable VARCHAR(100) = '[Master].[Versions]';
 
 	BEGIN TRY
 		-- Log the event
@@ -33,37 +33,22 @@ BEGIN
 			RAISERROR('Table %s cannot be populated, as it does not exist in this DB', 16, 25, @TargetTable);
 
 		-- Populate only an empty table:
-		IF NOT EXISTS (SELECT TOP 1 * FROM [Master].[ProductStocks])
+		IF NOT EXISTS (SELECT TOP 1 * FROM [Master].[Versions])
 		BEGIN
-			-- Generate a numbers table for multiplying duplicates (24025 rows)
-			WITH Numbers 
+			WITH Sundays
 			AS (
-				SELECT TOP (155) [object_id] FROM sys.all_objects
-			), NumSqr
-			AS (
-				SELECT ROW_NUMBER() OVER (ORDER BY Numbers.[object_id]) AS n
-				FROM Numbers CROSS JOIN Numbers AS N 
-			), Items
-			AS (
-				-- Generate an annual supply of product items according to how many are sold per week
-				SELECT ProductDetailId, Price	
-				FROM NumSqr CROSS JOIN ##ProductDetails AS PD
-				WHERE n <= 52 * (SELECT SoldPerWeek FROM ##ProductDetails
-					WHERE ProductDetailId = PD.ProductDetailId)
+				SELECT CAST('2020-01-05' AS DATE) AS VersionDate,
+					'Products weekly resupply' AS VersionDetails
+				UNION ALL
+				SELECT DATEADD(d, 7, VersionDate), VersionDetails FROM Sundays
+				WHERE VersionDate < '2020-12-27'
 			)
-			-- Add version numbers that correspond to weekly deliveries
-			INSERT INTO [Master].[ProductStocks] (ProductDetailId, Price, StartVersion)
-			SELECT ProductDetailId, 
-				Price,
-				NTILE(52) OVER(PARTITION BY ProductDetailId ORDER BY (SELECT NULL)) * 10000
-			FROM Items
-			
+			INSERT INTO [Master].[Versions] (OperationRunId, VersionDate, VersionDetails)
+			SELECT @OperationRunId, VersionDate, VersionDetails FROM Sundays
+						
 			-- Output the number of affected rows
 			SET @AffectedRows = @@ROWCOUNT;
 		END
-
-		-- Drop temporary dataset created during product details generation
-		DROP TABLE ##ProductDetails;
 		RETURN 0
 	END TRY
 	BEGIN CATCH
