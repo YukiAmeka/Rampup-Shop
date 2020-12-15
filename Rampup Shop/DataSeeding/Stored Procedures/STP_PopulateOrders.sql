@@ -35,7 +35,7 @@ BEGIN
 		-- Populate only an empty table:
 		IF NOT EXISTS (SELECT TOP 1 * FROM [Master].[Orders])
 		BEGIN
-			DECLARE @StartDate DATE = '2020-01-02', 
+			DECLARE @StartDate DATE = '2020-01-05', 
 				@EndDate DATE = DATEADD(d, -1, CAST(CURRENT_TIMESTAMP AS DATE));
 
 			WITH Calendar 
