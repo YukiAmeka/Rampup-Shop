@@ -48,22 +48,19 @@ BEGIN
 				-- Generate an annual supply of product items according to how many are sold per week
 				SELECT ProductDetailId, Price	
 				FROM NumSqr CROSS JOIN ##ProductDetails AS PD
-				WHERE n <= 52 * (SELECT SoldPerWeek FROM ##ProductDetails
+				WHERE n <= 50 * (SELECT SoldPerWeek FROM ##ProductDetails
 					WHERE ProductDetailId = PD.ProductDetailId)
 			)
 			-- Add version numbers that correspond to weekly deliveries
 			INSERT INTO [Master].[ProductStocks] (ProductDetailId, Price, StartVersion)
 			SELECT ProductDetailId, 
 				Price,
-				NTILE(52) OVER(PARTITION BY ProductDetailId ORDER BY (SELECT NULL)) * 10000
-			FROM Items
+				(NTILE(50) OVER(PARTITION BY ProductDetailId ORDER BY (SELECT NULL)) - 1) * 9010000 + 10000
+			FROM Items;
 			
 			-- Output the number of affected rows
 			SET @AffectedRows = @@ROWCOUNT;
 		END
-
-		-- Drop temporary dataset created during product details generation
-		DROP TABLE ##ProductDetails;
 		RETURN 0
 	END TRY
 	BEGIN CATCH

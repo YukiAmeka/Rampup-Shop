@@ -3,7 +3,7 @@
 	Table's data:		[Master].[Versions]
 	Short description:	Post-deployment data seeding into the table
 	Created on:			2020-12-10
-	Modified on:		2020-12-11
+	Modified on:		2020-12-15
 	Scripted by:		SOFTSERVE\alevc
 */
 -- ===================================================================================================================================================
@@ -35,17 +35,31 @@ BEGIN
 		-- Populate only an empty table:
 		IF NOT EXISTS (SELECT TOP 1 * FROM [Master].[Versions])
 		BEGIN
-			WITH Sundays
+			DECLARE @StartDate DATE = '2020-01-05', 
+				@EndDate DATE = DATEADD(d, -1, CAST(CURRENT_TIMESTAMP AS DATE));
+
+			WITH Calendar 
 			AS (
-				SELECT CAST('2020-01-05' AS DATE) AS VersionDate,
-					'Products weekly resupply' AS VersionDetails
-				UNION ALL
-				SELECT DATEADD(d, 7, VersionDate), VersionDetails FROM Sundays
-				WHERE VersionDate < '2020-12-27'
+				SELECT DATEADD(d, n-1, @StartDate) AS VersionDate
+				FROM (
+					SELECT TOP (DATEDIFF(d, @StartDate, @EndDate) + 1)
+						ROW_NUMBER() OVER (ORDER BY [object_id]) AS n
+					FROM sys.all_objects) AS Numbers
 			)
 			INSERT INTO [Master].[Versions] (OperationRunId, VersionDate, VersionDetails)
-			SELECT @OperationRunId, VersionDate, VersionDetails FROM Sundays
-						
+			SELECT @OperationRunId, VersionDate, 'Products weekly resupply'
+			FROM Calendar
+			WHERE DATENAME(dw, VersionDate) = 'Sunday'
+				UNION ALL
+			SELECT @OperationRunId, VersionDate, ''
+			FROM Calendar
+			CROSS JOIN (SELECT TOP (150) 
+				ROW_NUMBER() OVER (ORDER BY [object_id]) AS n
+				FROM sys.all_objects
+			) AS Numbers
+			WHERE DATENAME(dw, VersionDate) <> 'Sunday'
+			ORDER BY VersionDate;
+									
 			-- Output the number of affected rows
 			SET @AffectedRows = @@ROWCOUNT;
 		END

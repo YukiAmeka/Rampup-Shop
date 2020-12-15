@@ -3,7 +3,7 @@
 	Table's data:		[Master] schema, [Logs] schema
 	Short description:	Launches procedures for seeding data into tables, logging & error handling of the operation
 	Created on:			2020-12-03
-	Modified on:		2020-12-10
+	Modified on:		2020-12-15
 	Scripted by:		SOFTSERVE\alevc
 */
 -- ===================================================================================================================================================
@@ -49,7 +49,8 @@ BEGIN
 				('STP_PopulateProductTypes'),
 				('STP_PopulateProductDetails'),
 				('STP_PopulateVersions'),
-				('STP_PopulateProductStocks');
+				('STP_PopulateProductStocks'),
+				('STP_PopulateOrderedProducts');
 		SET @NumberOfProcs = (SELECT COUNT(ProcName) FROM #SeedingProcedures);
 
 		-- Run data seeding procedures one by one to populate tables with dummy data

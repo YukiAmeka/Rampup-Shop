@@ -3,7 +3,7 @@
 	Table's data:		[Master].[Orders]
 	Short description:	Post-deployment data seeding into the table
 	Created on:			2020-12-07
-	Modified on:		2020-12-09
+	Modified on:		2020-12-15
 	Scripted by:		SOFTSERVE\alevc
 */
 -- ===================================================================================================================================================
@@ -55,7 +55,11 @@ BEGIN
 			)
 			INSERT INTO [Master].[Orders] (OrderDate, ShipDate, CustomerId, AddressId, OrderStatusId, ShipMethodId, EmployeeId)
 			SELECT OrderDate, 
-				IIF(PC.AddressId IS NULL, OrderDate, DATEADD(d, 1, OrderDate)) AS ShipDate,
+				CASE
+					WHEN PC.AddressId IS NULL THEN OrderDate
+					WHEN PC.AddressId IS NOT NULL AND DATENAME(dw, OrderDate) = 'Saturday' THEN DATEADD(d, 2, OrderDate)
+					ELSE DATEADD(d, 1, OrderDate)
+				END AS ShipDate,
 				PC.CustomerId, 
 				PC.AddressId,
 				3 AS OrderStatusId,
@@ -66,7 +70,8 @@ BEGIN
 			FROM Calendar
 			CROSS JOIN Master.Customers AS MC
 			LEFT JOIN PickedCustomers AS PC ON MC.CustomerId = PC.CustomerId
-			WHERE DATENAME(dw, OrderDate) <> 'Sunday';
+			WHERE DATENAME(dw, OrderDate) <> 'Sunday'
+			ORDER BY OrderDate;
 			
 			-- Output the number of affected rows
 			SET @AffectedRows = @@ROWCOUNT;
