@@ -50,7 +50,8 @@ BEGIN
 				('STP_PopulateProductDetails'),
 				('STP_PopulateVersions'),
 				('STP_PopulateProductStocks'),
-				('STP_PopulateOrderedProducts');
+				('STP_PopulateOrderedProducts'),
+				('STP_UpdateEndVersions');
 		SET @NumberOfProcs = (SELECT COUNT(ProcName) FROM #SeedingProcedures);
 
 		-- Run data seeding procedures one by one to populate tables with dummy data

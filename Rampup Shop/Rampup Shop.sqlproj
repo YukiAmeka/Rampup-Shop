@@ -102,6 +102,7 @@
     <Build Include="Master\Stored Procedures\STP_SubmitOrder.sql" />
     <Build Include="Master\Tables\OrderedProducts.sql" />
     <Build Include="Master\Views\VW_ProductsAvailableForPurchase.sql" />
+    <Build Include="DataSeeding\Stored Procedures\STP_PopulateOrderedProducts.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment.sql" />
