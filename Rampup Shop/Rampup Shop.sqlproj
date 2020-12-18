@@ -68,6 +68,8 @@
     <Folder Include="Master\Stored Procedures" />
     <Folder Include="Master\Views" />
     <Folder Include="Master\Functions" />
+    <Folder Include="Staging" />
+    <Folder Include="Staging\Tables" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="Master\Tables\Addresses.sql" />
@@ -107,6 +109,7 @@
     <Build Include="Master\Functions\FN_CustomerProfile.sql" />
     <Build Include="Master\Views\VW_ProductsAvailableInStocks.sql" />
     <Build Include="Master\Views\VW_ProductsAvailableSummary.sql" />
+    <Build Include="Staging\Tables\ProductPrices.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment.sql" />

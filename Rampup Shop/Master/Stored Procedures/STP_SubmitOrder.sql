@@ -35,16 +35,6 @@ BEGIN
 		IF @SuccessStatus = 1
 			RAISERROR('Operation start could not be logged. Order creation has been interrupted', 12, 50);
 
-		-- Check if tables exists
-		IF OBJECT_ID('[Master].[Orders]') IS NULL
-			RAISERROR('Cannot write in table [Master].[Orders], as it does not exist in this DB', 16, 50);
-		IF OBJECT_ID('[Master].[OrderedProducts]') IS NULL
-			RAISERROR('Cannot write in table [Master].[OrderedProducts], as it does not exist in this DB', 16, 50);
-		IF OBJECT_ID('[Master].[Versions]') IS NULL
-			RAISERROR('Cannot write in table [Master].[Versions], as it does not exist in this DB', 16, 50);
-		IF OBJECT_ID('[Master].[ProductStocks]') IS NULL
-			RAISERROR('Cannot write in table [Master].[ProductStocks], as it does not exist in this DB', 16, 50);
-
 		-- Check if all necessary data have been input
 		IF @CustomerId IS NULL
 			RAISERROR('CustomerId has not been provided', 16, 50);
