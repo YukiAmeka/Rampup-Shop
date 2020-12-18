@@ -65,6 +65,8 @@
     <Folder Include="Logs\Stored Procedures" />
     <Folder Include="Logs\Tables" />
     <Folder Include="DataSeeding\Stored Procedures" />
+    <Folder Include="Master\Stored Procedures" />
+    <Folder Include="Master\Views" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="Master\Tables\Addresses.sql" />
@@ -83,6 +85,24 @@
     <Build Include="DataSeeding\Stored Procedures\STP_PopulateEmployeePositions.sql" />
     <Build Include="DataSeeding\Stored Procedures\STP_PopulateEmployees.sql" />
     <Build Include="DataSeeding\Stored Procedures\STP_PopulateMasterData.sql" />
+    <Build Include="DataSeeding\Stored Procedures\STP_PopulateOrders.sql" />
+    <Build Include="DataSeeding\Stored Procedures\STP_PopulateOrderStatuses.sql" />
+    <Build Include="DataSeeding\Stored Procedures\STP_PopulateProductDetails.sql" />
+    <Build Include="DataSeeding\Stored Procedures\STP_PopulateProductStocks.sql" />
+    <Build Include="DataSeeding\Stored Procedures\STP_PopulateProductTypes.sql" />
+    <Build Include="DataSeeding\Stored Procedures\STP_PopulateShipMethods.sql" />
+    <Build Include="DataSeeding\Stored Procedures\STP_PopulateVersions.sql" />
+    <Build Include="Master\Tables\Orders.sql" />
+    <Build Include="Master\Tables\OrderStatuses.sql" />
+    <Build Include="Master\Tables\ProductDetails.sql" />
+    <Build Include="Master\Tables\ProductStocks.sql" />
+    <Build Include="Master\Tables\ProductTypes.sql" />
+    <Build Include="Master\Tables\ShipMethods.sql" />
+    <Build Include="Master\Tables\Versions.sql" />
+    <Build Include="Master\Stored Procedures\STP_SubmitOrder.sql" />
+    <Build Include="Master\Tables\OrderedProducts.sql" />
+    <Build Include="Master\Views\VW_ProductsAvailableForPurchase.sql" />
+    <Build Include="DataSeeding\Stored Procedures\STP_PopulateOrderedProducts.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment.sql" />

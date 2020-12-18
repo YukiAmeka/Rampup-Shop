@@ -1,14 +1,14 @@
--- ===================================================================================================================================================
+﻿-- ===================================================================================================================================================
 /*
-	Table's data:		[Master].[Employees]
+	Table's data:		[Master].[OrderStatuses]
 	Short description:	Post-deployment data seeding into the table
-	Created on:			2020-11-30
-	Modified on:		2020-12-07
+	Created on:			2020-12-07
+	Modified on:		2020-12-09
 	Scripted by:		SOFTSERVE\alevc
 */
 -- ===================================================================================================================================================
 
-CREATE PROCEDURE [DataSeeding].[STP_PopulateEmployees]
+CREATE PROCEDURE [DataSeeding].[STP_PopulateOrderStatuses]
 	@OperationRunId INT = NULL,
 	@AffectedRows INT OUTPUT
 AS
@@ -16,7 +16,7 @@ BEGIN
 	SET NOCOUNT ON;
 
 	DECLARE @SuccessStatus INT,
-		@TargetTable VARCHAR(100) = '[Master].[Employees]';
+		@TargetTable VARCHAR(100) = '[Master].[OrderStatuses]';
 
 	BEGIN TRY
 		-- Log the event
@@ -24,25 +24,21 @@ BEGIN
 		EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
 			@CallingProc = @@PROCID,
 			@Message = @Message;
-
+		
 		IF @SuccessStatus = 1
 			RAISERROR('Event logging has failed. Table %s has not been populated', 12, 25, @TargetTable);
-			
+
 		-- Check if table exists
 		IF OBJECT_ID(@TargetTable) IS NULL
 			RAISERROR('Table %s cannot be populated, as it does not exist in this DB', 16, 25, @TargetTable);
 
 		-- Populate only an empty table:
-		IF NOT EXISTS (SELECT TOP 1 * FROM [Master].[Employees])
+		IF NOT EXISTS (SELECT TOP 1 * FROM [Master].[OrderStatuses])
 		BEGIN
-			INSERT INTO [Master].[Employees] (FirstName, LastName, Email, EmployeePositionId, DateHired, DateFired)
-			VALUES ('Katrine', 'Burke', 'kburke@rampupshop.com', 1, '2020-01-02', DEFAULT),
-				('Mason', 'Inoue', 'minoue@rampupshop.com', 2, '2020-08-14', DEFAULT),
-				('Renata', 'Janusewycz', 'rjanusewycz@rampupshop.com', 2, '2020-05-22', DEFAULT),
-				('Yannis', 'Aetos', 'yaetos@rampupshop.com', 2, '2020-04-12', '2020-05-22'),
-				('Daina', 'Wilson', 'dwilson@rampupshop.com', 2, '2020-03-04', '2020-03-31'),
-				('Linda', 'Holland', 'lholland@rampupshop.com', 2, '2020-02-18', '2020-08-10'),
-				('Paul', 'Olsson', 'polsson@rampupshop.com', 2, '2020-01-02', '2020-03-05');
+			INSERT INTO [Master].[OrderStatuses] (Name, Description)
+			VALUES ('Submitted', 'Customer has submitted his/her order via website'),
+				('Confirmed', 'Shop assistant has checked over the information in the order'),
+				('Done', 'Ordered products have been sent to / collected by customer');
 			
 			-- Output the number of affected rows
 			SET @AffectedRows = @@ROWCOUNT;
