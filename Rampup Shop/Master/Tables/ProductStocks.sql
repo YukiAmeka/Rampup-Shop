@@ -4,5 +4,5 @@
 	[ProductDetailId] INT NOT NULL CONSTRAINT FK_ProductStocks_ProductDetails_ProductDetailId FOREIGN KEY REFERENCES [Master].[ProductDetails] ([ProductDetailId]), 
     [Price] MONEY NOT NULL, 
     [StartVersion] INT NOT NULL CONSTRAINT FK_ProductStocks_Versions_StartVersionId FOREIGN KEY REFERENCES [Master].[Versions] ([VersionId]), 
-    [EndVersion] INT NULL CONSTRAINT FK_ProductStocks_Versions_EndVersionId FOREIGN KEY REFERENCES [Master].[Versions] ([VersionId])
+    [EndVersion] INT NOT NULL DEFAULT 999999999
 )
