@@ -67,6 +67,7 @@
     <Folder Include="DataSeeding\Stored Procedures" />
     <Folder Include="Master\Stored Procedures" />
     <Folder Include="Master\Views" />
+    <Folder Include="Master\Functions" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="Master\Tables\Addresses.sql" />
@@ -101,8 +102,11 @@
     <Build Include="Master\Tables\Versions.sql" />
     <Build Include="Master\Stored Procedures\STP_SubmitOrder.sql" />
     <Build Include="Master\Tables\OrderedProducts.sql" />
-    <Build Include="Master\Views\VW_ProductsAvailableForPurchase.sql" />
     <Build Include="DataSeeding\Stored Procedures\STP_PopulateOrderedProducts.sql" />
+    <Build Include="DataSeeding\Stored Procedures\STP_UpdateEndVersions.sql" />
+    <Build Include="Master\Functions\FN_CustomerProfile.sql" />
+    <Build Include="Master\Views\VW_ProductsAvailableInStocks.sql" />
+    <Build Include="Master\Views\VW_ProductsAvailableSummary.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment.sql" />
