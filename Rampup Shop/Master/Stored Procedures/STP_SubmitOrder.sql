@@ -122,7 +122,7 @@ BEGIN
 			IF @SuccessStatus = 1
 				RAISERROR('Event logging has failed. Order has not been recorded', 12, 50);
 
-			-- Create new version
+			-- Create a new version
 			INSERT INTO [Master].[Versions] (OperationRunId, VersionDate, VersionDetails)
 				VALUES (@OperationRunId, CAST (CURRENT_TIMESTAMP AS DATE), CONCAT('Order No ', @OrderId, ' received from customer No ', @CustomerId));
 			SET @NewVersion = SCOPE_IDENTITY();
@@ -155,7 +155,7 @@ BEGIN
 				@Message = 'New customer order has been successfully created.';
 		
 			IF @SuccessStatus = 1
-				RAISERROR('Operation completion could not be logged', 9, 15);
+				RAISERROR('Operation completion could not be logged', 9, 50);
 		COMMIT TRAN
 		RETURN 0
 	END TRY

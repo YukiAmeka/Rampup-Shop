@@ -26,7 +26,8 @@ BEGIN
 		-- Fill in types of operations for logging purposes
 		INSERT INTO [Logs].[Operations] (Name, Description)
 			VALUES ('Data seeding', 'Initial population of the DB at creation'),
-				('New order', 'Customer adds a new order');
+				('New order', 'Customer adds a new order'),
+				('Upload from file', 'New data is uploaded from file via the Staging schema (prices update, resupply, etc)');
 
 		-- Log operation start
 		EXEC @SuccessStatus = [Logs].[STP_StartOperation] @OperationId = 1,

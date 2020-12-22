@@ -13,7 +13,7 @@
     </RootPath>
     <RootNamespace>Rampup_Shop</RootNamespace>
     <AssemblyName>Rampup_Shop</AssemblyName>
-    <ModelCollation>1058,CI</ModelCollation>
+    <ModelCollation>1033,CI</ModelCollation>
     <DefaultFileStructure>BySchemaAndSchemaType</DefaultFileStructure>
     <DeployToDatabase>True</DeployToDatabase>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
@@ -22,7 +22,7 @@
     <SqlServerVerification>False</SqlServerVerification>
     <IncludeCompositeObjects>True</IncludeCompositeObjects>
     <TargetDatabaseSet>True</TargetDatabaseSet>
-    <DefaultCollation>Ukrainian_CI_AS</DefaultCollation>
+    <DefaultCollation>SQL_Latin1_General_CP1_CI_AS</DefaultCollation>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>bin\Release\</OutputPath>
@@ -70,6 +70,7 @@
     <Folder Include="Master\Functions" />
     <Folder Include="Staging" />
     <Folder Include="Staging\Tables" />
+    <Folder Include="Staging\Stored Procedures" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="Master\Tables\Addresses.sql" />
@@ -110,6 +111,8 @@
     <Build Include="Master\Views\VW_ProductsAvailableInStocks.sql" />
     <Build Include="Master\Views\VW_ProductsAvailableSummary.sql" />
     <Build Include="Staging\Tables\ProductPrices.sql" />
+    <Build Include="Master\Functions\FN_OrderInfo.sql" />
+    <Build Include="Staging\Stored Procedures\STP_UpdatePrices.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment.sql" />
