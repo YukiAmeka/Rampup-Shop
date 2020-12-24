@@ -3,7 +3,7 @@
 	Table's data:		[Logs].[Events]
 	Short description:	Records an event as part of an operation
 	Created on:			2020-12-02
-	Modified on:		2020-12-04
+	Modified on:		2020-12-23
 	Scripted by:		SOFTSERVE\alevc
 */
 -- ===================================================================================================================================================
@@ -11,6 +11,7 @@
 CREATE PROCEDURE [Logs].[STP_SetEvent]
 	@OperationRunId INT = NULL,
 	@CallingProc INT = NULL,
+	@Process VARCHAR(MAX) = NULL,
 	@Message VARCHAR(MAX) = NULL
 AS
 BEGIN
@@ -25,7 +26,7 @@ BEGIN
 
 		-- Log the event
 		INSERT INTO [Logs].[Events] (OperationRunId, CallingProc, Message, DateTime)
-			VALUES (@OperationRunId, @CallingProcFullName, @Message, CURRENT_TIMESTAMP);
+			VALUES (@OperationRunId, ISNULL(@Process, @CallingProcFullName), @Message, CURRENT_TIMESTAMP);
 
 		-- Print runtime message to the user if any
 		IF @Message IS NOT NULL

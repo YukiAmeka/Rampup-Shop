@@ -3,7 +3,7 @@
 	Table's data:		[Logs].[OperationRuns]
 	Short description:	Records an operation start
 	Created on:			2020-12-02
-	Modified on:		2020-12-04
+	Modified on:		2020-12-23
 	Scripted by:		SOFTSERVE\alevc
 */
 -- ===================================================================================================================================================
@@ -11,6 +11,8 @@
 CREATE PROCEDURE [Logs].[STP_StartOperation]
 	@OperationId INT = NULL,
 	@CallingProc INT = NULL,
+	@Process VARCHAR(MAX) = NULL,
+	@CallingUser VARCHAR(MAX) = NULL,
 	@Message VARCHAR(MAX) = NULL,
 	@OperationRunId INT OUTPUT
 AS
@@ -23,7 +25,7 @@ BEGIN
 	BEGIN TRY
 		-- Log operation start
 		INSERT INTO [Logs].[OperationRuns] (OperationId, CallingUser, CallingProc, StartTime, Status, Message)
-			VALUES (@OperationId, SYSTEM_USER, @CallingProcFullName, CURRENT_TIMESTAMP, 'Running', @Message);
+			VALUES (@OperationId, ISNULL(@CallingUser, SYSTEM_USER), ISNULL(@Process, @CallingProcFullName), CURRENT_TIMESTAMP, 'Running', @Message);
 		
 		-- Output the generated OperationRunId
 		SET @OperationRunId = SCOPE_IDENTITY();

@@ -8,7 +8,7 @@
 */
 -- ===================================================================================================================================================
 
-CREATE PROCEDURE [Master].[STP_UpdatePrices]
+CREATE PROCEDURE [Staging].[STP_UpdatePrices]
 AS
 BEGIN
 	SET NOCOUNT ON;
