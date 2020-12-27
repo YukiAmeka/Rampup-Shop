@@ -113,6 +113,7 @@
     <Build Include="Staging\Tables\ProductPrices.sql" />
     <Build Include="Master\Functions\FN_OrderInfo.sql" />
     <Build Include="Staging\Stored Procedures\STP_UpdatePrices.sql" />
+    <Build Include="Staging\Stored Procedures\STP_UpdatePricesFromStaging.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment.sql" />

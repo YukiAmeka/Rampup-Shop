@@ -117,9 +117,6 @@ BEGIN
 		-- Log the error
 		EXEC [Logs].[STP_SetError] @OperationRunId, @ErrorNumber, @ErrorSeverity, @ErrorState, @ErrorProcedure, @ErrorLine, @ErrorMessage;
 		
-		-- Log operation failure
-		EXEC [Logs].[STP_FailOperation] @OperationRunId, 'Prices update has failed';
-
 		-- Raiserror to the application
 		RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
 

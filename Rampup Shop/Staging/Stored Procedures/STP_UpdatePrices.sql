@@ -1,9 +1,9 @@
 ﻿-- ===================================================================================================================================================
 /*
-	Table's data:		[Master].[Versions], [Master].[ProductStocks]
-	Short description:	Update prices for unsold product items from table [Staging].[ProductPrices]
+	Table's data:		[Staging].[ProductPrices], [Master].[Versions], [Master].[ProductStocks]
+	Short description:	Update prices for unsold product items from csv file
 	Created on:			2020-12-20
-	Modified on:		2020-12-21
+	Modified on:		2020-12-24
 	Scripted by:		SOFTSERVE\alevc
 */
 -- ===================================================================================================================================================
@@ -17,7 +17,13 @@ BEGIN
 		@OperationRunId INT,
 		@NewVersion INT,
 		@AffectedRows INT,
-		@Message VARCHAR(MAX);
+		@Message VARCHAR(MAX),
+		@CMDcommand VARCHAR(1000),
+		@SourceFilePath VARCHAR(255) = 'C:\Users\alevc\source\repos\Rumpup Shop SSIS\Sources\',
+		@ArchiveFilePath VARCHAR(255) = 'C:\Users\alevc\source\repos\Rumpup Shop SSIS\Archive\',
+		@FileName VARCHAR(255) = 'ProductPrices.csv',
+		@DBName VARCHAR(255) = '"' + db_name() + '"',
+		@TableName VARCHAR(255) = '[Staging].[ProductPrices]';
 
 	BEGIN TRY
 		-- Log operation start
@@ -29,91 +35,52 @@ BEGIN
 		IF @SuccessStatus = 1
 			RAISERROR('Operation start could not be logged. Prices update has been interrupted', 12, 60);
 
-		BEGIN TRAN
-			IF EXISTS (SELECT TOP 1 * FROM [Staging].[ProductPrices])
-			BEGIN
-				-- Log the event
-				SET @Message = 'Creating a new version';
-				EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
-					@CallingProc = @@PROCID,
-					@Message = @Message;
+		-- Log the event
+		SET @Message = 'Prepping table ' + @TableName + ' to upload';
+		EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
+			@CallingProc = @@PROCID,
+			@Message = @Message;
+
+		-- Clear the staging table
+		TRUNCATE TABLE [Staging].[ProductPrices];
+
+		-- Log the event
+		SET @Message = 'Uploading new prices from file ' + @SourceFilePath + @FileName + ' into table ' + @TableName;
+		EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
+			@CallingProc = @@PROCID,
+			@Message = @Message;
+
+		-- Upload new prices from a csv file
+		SET @CMDcommand = 'BCP "' + @TableName + '" in "' + @SourceFilePath + @FileName + '" -c -t "," -r "\n" -T -d ' + @DBName;
+		EXEC master..xp_cmdshell @CMDcommand, no_output;
+			
+		-- Update prices for unsold product items from table [Staging].[ProductPrices]
+		EXEC @SuccessStatus = [Staging].[STP_UpdatePricesFromStaging] @OperationRunId = @OperationRunId,
+			@Message = @Message OUTPUT;
+
+		IF @SuccessStatus = 1
+			RAISERROR('Updating prices from table [Staging].[ProductPrices] has failed', 16, 60);
+
+		-- Log the event
+		SET @Message = 'Moving file ' + @SourceFilePath + @FileName + ' to the archive folder';
+		EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
+			@CallingProc = @@PROCID,
+			@Message = @Message;
+
+		-- Move the csv file to the archive folder
+		SET @CMDcommand = 'move "' + @SourceFilePath + @FileName + '" "' + @ArchiveFilePath + '"';
+		EXEC master..xp_cmdshell @CMDcommand, no_output;
+
+		-- Log successful operation completion
+		EXEC @SuccessStatus = [Logs].[STP_CompleteOperation] @OperationRunId = @OperationRunId,
+			@AffectedRows = @AffectedRows,
+			@Message = @Message;
 		
-				IF @SuccessStatus = 1
-					RAISERROR('Event logging has failed. Prices have not been updated', 12, 60);
-
-				-- Create new version
-				INSERT INTO [Master].[Versions] (OperationRunId, VersionDate, VersionDetails)
-					VALUES (@OperationRunId, CAST (CURRENT_TIMESTAMP AS DATE), 'Product price change');
-				SET @NewVersion = SCOPE_IDENTITY();
-
-				-- Init the number of affected rows
-				SET @AffectedRows = @@ROWCOUNT;
-
-				-- Log the event
-				SET @Message = 'Creating records with new prices in [Master].[ProductStocks]';
-				EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
-					@CallingProc = @@PROCID,
-					@Message = @Message;
-		
-				IF @SuccessStatus = 1
-					RAISERROR('Event logging has failed. Prices have not been updated', 12, 60);
-
-				-- Copy records for unsold items with new prices and start version
-				INSERT INTO [Master].[ProductStocks] (ProductDetailId, Price, StartVersion, EndVersion)
-				SELECT PS.ProductDetailId, PP.Price, @NewVersion, 999999999 
-				FROM [Master].[ProductStocks] AS PS
-				JOIN [Staging].[ProductPrices] AS PP ON PS.ProductDetailId = PP.ProductPriceId
-					WHERE PS.Price <> PP.Price
-					AND PS.EndVersion = 999999999
-
-				-- Increment the number of affected rows
-				SET @AffectedRows += @@ROWCOUNT;
-
-				-- Log the event
-				SET @Message = 'Closing end version for retired records in [Master].[ProductStocks]';
-				EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
-					@CallingProc = @@PROCID,
-					@Message = @Message;
-		
-				IF @SuccessStatus = 1
-					RAISERROR('Event logging has failed. Prices have not been updated', 12, 60);
-
-				-- Close end version for retired records of unsold items
-				UPDATE [Master].[ProductStocks]
-				SET EndVersion = @NewVersion
-				FROM [Master].[ProductStocks] AS PS
-				JOIN [Staging].[ProductPrices] AS PP ON PS.ProductDetailId = PP.ProductPriceId
-					WHERE PS.Price <> PP.Price
-					AND PS.EndVersion = 999999999
-
-				-- Increment the number of affected rows
-				SET @AffectedRows += @@ROWCOUNT;
-
-				-- Set operation message
-				SET @Message = IIF(@AffectedRows > 0, 
-					'Prices have been successfully updated.', 
-					'Prices contained in table [Staging].[ProductPrices] are no different from ones on record');
-			END
-			ELSE
-			BEGIN
-				-- Set operation message
-				SET @Message = 'Table [Staging].[ProductPrices] is empty.';
-			END;
-
-			-- Log successful operation completion
-			EXEC @SuccessStatus = [Logs].[STP_CompleteOperation] @OperationRunId = @OperationRunId,
-				@AffectedRows = @AffectedRows,
-				@Message = @Message;
-		
-			IF @SuccessStatus = 1
-				RAISERROR('Operation completion could not be logged', 9, 60);
-		COMMIT TRAN
+		IF @SuccessStatus = 1
+			RAISERROR('Operation completion could not be logged', 9, 60);
 		RETURN 0
 	END TRY
 	BEGIN CATCH
-		IF @@TRANCOUNT > 0
-			ROLLBACK TRAN
-
 		DECLARE @ErrorNumber INT = ERROR_NUMBER(), 
 			@ErrorSeverity INT = ERROR_SEVERITY(), 
 			@ErrorState INT = ERROR_STATE(), 
