@@ -3,7 +3,7 @@
 	Table's data:		[Staging].[ProductPrices], [Master].[Versions], [Master].[ProductStocks]
 	Short description:	Update prices for unsold product items from csv file
 	Created on:			2020-12-20
-	Modified on:		2020-12-24
+	Modified on:		2020-12-28
 	Scripted by:		SOFTSERVE\alevc
 */
 -- ===================================================================================================================================================
@@ -19,11 +19,18 @@ BEGIN
 		@AffectedRows INT,
 		@Message VARCHAR(MAX),
 		@CMDcommand VARCHAR(1000),
+		@FilesNumber INT,
+		@Counter INT = 1,
 		@SourceFilePath VARCHAR(255) = 'C:\Users\alevc\source\repos\Rumpup Shop SSIS\Sources\',
 		@ArchiveFilePath VARCHAR(255) = 'C:\Users\alevc\source\repos\Rumpup Shop SSIS\Archive\',
-		@FileName VARCHAR(255) = 'ProductPrices.csv',
+		@FormatFile VARCHAR(255) = 'C:\Users\alevc\source\repos\Rumpup Shop SSIS\Formats\ProductPrices.fmt',
+		@FileName VARCHAR(255),
 		@DBName VARCHAR(255) = '"' + db_name() + '"',
 		@TableName VARCHAR(255) = '[Staging].[ProductPrices]';
+
+	DECLARE @Output TABLE (
+		FullFileStr VARCHAR(MAX)
+	);
 
 	BEGIN TRY
 		-- Log operation start
@@ -50,30 +57,75 @@ BEGIN
 			@CallingProc = @@PROCID,
 			@Message = @Message;
 
-		-- Upload new prices from a csv file
-		SET @CMDcommand = 'BCP "' + @TableName + '" in "' + @SourceFilePath + @FileName + '" -c -t "," -r "\n" -T -d ' + @DBName;
-		EXEC master..xp_cmdshell @CMDcommand, no_output;
+		-- Retrieve a list of files that are currently in the source folder
+		SET @CMDcommand = 'dir "' + @SourceFilePath + '"';
+		INSERT INTO @Output
+		EXEC master..xp_cmdshell @CMDcommand;
+
+		-- Save file names and modification datetimes in a temp table
+		DROP TABLE IF EXISTS #DirFiles;
+		SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS DirFileId,
+			RIGHT(FullFileStr, CHARINDEX(' ', REVERSE(FullFileStr)) - 1) AS FileName,
+			CONVERT(DATETIME, LEFT(FullFileStr, 10), 104) + CONVERT(DATETIME, SUBSTRING(FullFileStr, 13, 5), 108) AS ModifiedDateTime,
+			0 AS Processed
+		INTO #DirFiles
+		FROM @Output
+		WHERE FullFileStr IS NOT NULL
+			AND LEFT(FullFileStr, 1) <> ' '
+			AND FullFileStr NOT LIKE '%<DIR>%';
+		SET @FilesNumber = (SELECT MAX(DirFileId) FROM #DirFiles);
+
+		-- Upload new prices from csv files into [Staging].[ProductPrices] one by one
+		WHILE @Counter <= @FilesNumber
+		BEGIN
+			SET @FileName = (SELECT FileName FROM #DirFiles
+				WHERE DirFileId = @Counter);
+
+			SET @CMDcommand = 'BCP "' + @TableName + '" in "' + @SourceFilePath + @FileName + '" -c -t "," -r "\n" -T -d ' + @DBName + ' -f "' + @FormatFile + '"';
+			EXEC master..xp_cmdshell @CMDcommand, no_output;
+
+			UPDATE [Staging].[ProductPrices]
+			SET ModifiedDateTime = (SELECT ModifiedDateTime FROM #DirFiles
+				WHERE DirFileId = @Counter)
+			WHERE ModifiedDateTime IS NULL;
+
+			SET @Counter += 1;
+		END;
 			
 		-- Update prices for unsold product items from table [Staging].[ProductPrices]
-		EXEC @SuccessStatus = [Staging].[STP_UpdatePricesFromStaging] @OperationRunId = @OperationRunId,
-			@Message = @Message OUTPUT;
+		--EXEC @SuccessStatus = [Staging].[STP_UpdatePricesFromStaging] @OperationRunId = @OperationRunId,
+		--	@Message = @Message OUTPUT;
 
-		IF @SuccessStatus = 1
-			RAISERROR('Updating prices from table [Staging].[ProductPrices] has failed', 16, 60);
+		--IF @SuccessStatus = 1
+		--	RAISERROR('Updating prices from table [Staging].[ProductPrices] has failed', 16, 60);
 
 		-- Log the event
-		SET @Message = 'Moving file ' + @SourceFilePath + @FileName + ' to the archive folder';
-		EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
-			@CallingProc = @@PROCID,
-			@Message = @Message;
+		--SET @Message = 'Moving file ' + @SourceFilePath + @FileName + ' to the archive folder';
+		--EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
+		--	@CallingProc = @@PROCID,
+		--	@Message = @Message;
 
 		-- Move the csv file to the archive folder
-		SET @CMDcommand = 'move "' + @SourceFilePath + @FileName + '" "' + @ArchiveFilePath + '"';
-		EXEC master..xp_cmdshell @CMDcommand, no_output;
+		SET @Counter = 1;
+		WHILE @Counter <= @FilesNumber
+		BEGIN
+			SET @FileName = (SELECT FileName FROM #DirFiles
+				WHERE DirFileId = @Counter AND Processed = 1);
+
+			IF @FileName IS NOT NULL
+			BEGIN
+				SET @CMDcommand = 'move "' + @SourceFilePath + @FileName + '" "' + @ArchiveFilePath + '"';
+				EXEC master..xp_cmdshell @CMDcommand;
+			END			
+
+			SET @Counter += 1;
+		END;
+
+		-- Drop the temporary list of files
+		DROP TABLE #DirFiles;
 
 		-- Log successful operation completion
 		EXEC @SuccessStatus = [Logs].[STP_CompleteOperation] @OperationRunId = @OperationRunId,
-			@AffectedRows = @AffectedRows,
 			@Message = @Message;
 		
 		IF @SuccessStatus = 1

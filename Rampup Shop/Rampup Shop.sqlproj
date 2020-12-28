@@ -90,7 +90,6 @@
     <Build Include="DataSeeding\Stored Procedures\STP_PopulateEmployees.sql" />
     <Build Include="DataSeeding\Stored Procedures\STP_PopulateMasterData.sql" />
     <Build Include="DataSeeding\Stored Procedures\STP_PopulateOrders.sql" />
-    <Build Include="DataSeeding\Stored Procedures\STP_PopulateOrderStatuses.sql" />
     <Build Include="DataSeeding\Stored Procedures\STP_PopulateProductDetails.sql" />
     <Build Include="DataSeeding\Stored Procedures\STP_PopulateProductStocks.sql" />
     <Build Include="DataSeeding\Stored Procedures\STP_PopulateProductTypes.sql" />
@@ -114,6 +113,7 @@
     <Build Include="Master\Functions\FN_OrderInfo.sql" />
     <Build Include="Staging\Stored Procedures\STP_UpdatePrices.sql" />
     <Build Include="Staging\Stored Procedures\STP_UpdatePricesFromStaging.sql" />
+    <Build Include="DataSeeding\Stored Procedures\STP_PopulateOrderStatuses.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment.sql" />

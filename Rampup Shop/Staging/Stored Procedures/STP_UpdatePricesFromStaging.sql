@@ -3,7 +3,7 @@
 	Table's data:		[Master].[Versions], [Master].[ProductStocks]
 	Short description:	Update prices for unsold product items from table [Staging].[ProductPrices]
 	Created on:			2020-12-22
-	Modified on:		2020-12-24
+	Modified on:		2020-12-28
 	Scripted by:		SOFTSERVE\alevc
 */
 -- ===================================================================================================================================================
@@ -74,6 +74,13 @@ BEGIN
 			JOIN [Staging].[ProductPrices] AS PP ON PS.ProductDetailId = PP.ProductPriceId
 				WHERE PS.Price <> PP.Price
 				AND PS.EndVersion = 999999999
+
+			--SELECT TOP (1000) [ProductPriceId]
+			--  ,[Name]
+			--  ,[Price]
+			--  ,[ModifiedDateTime]
+			--  ,MAX([ModifiedDateTime]) OVER (PARTITION BY [ProductPriceId], [Name]) AS LatestEntry
+		 -- FROM [Ramp Shop].[Staging].[ProductPrices]
 
 			-- Increment the number of affected rows
 			SET @AffectedRows += @@ROWCOUNT;
