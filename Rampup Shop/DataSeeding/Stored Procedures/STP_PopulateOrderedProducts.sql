@@ -3,31 +3,22 @@
 	Table's data:		[Master].[OrderedProducts]
 	Short description:	Post-deployment data seeding into the table
 	Created on:			2020-12-13
-	Modified on:		2020-12-15
+	Modified on:		2020-12-24
 	Scripted by:		SOFTSERVE\alevc
 */
 -- ===================================================================================================================================================
 
 CREATE PROCEDURE [DataSeeding].[STP_PopulateOrderedProducts]
-	@OperationRunId INT = NULL,
-	@AffectedRows INT OUTPUT
+	@OperationRunId INT = NULL
 AS
 BEGIN
 	SET NOCOUNT ON;
 
 	DECLARE @SuccessStatus INT,
+		@AffectedRows INT = 0,
 		@TargetTable VARCHAR(100) = '[Master].[OrderedProducts]';
 
 	BEGIN TRY
-		-- Log the event
-		DECLARE @Message VARCHAR(MAX) = 'Populating data into ' + @TargetTable;
-		EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
-			@CallingProc = @@PROCID,
-			@Message = @Message;
-		
-		IF @SuccessStatus = 1
-			RAISERROR('Event logging has failed. Table %s has not been populated', 12, 25, @TargetTable);
-
 		-- Check if table exists
 		IF OBJECT_ID(@TargetTable) IS NULL
 			RAISERROR('Table %s cannot be populated, as it does not exist in this DB', 16, 25, @TargetTable);
@@ -83,6 +74,16 @@ BEGIN
 
 		-- Drop temporary dataset created during product details generation
 		DROP TABLE ##ProductDetails;
+
+		-- Log the event
+		DECLARE @Message VARCHAR(MAX) = '13) Populating data into ' + @TargetTable;
+		EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
+			@CallingProc = @@PROCID,
+			@AffectedRows = @AffectedRows,
+			@Message = @Message;
+		
+		IF @SuccessStatus = 1
+			RAISERROR('Event logging has failed. Table %s has not been populated', 12, 25, @TargetTable);
 		RETURN 0
 	END TRY
 	BEGIN CATCH
@@ -95,6 +96,10 @@ BEGIN
 		
 		-- Log the error
 		EXEC [Logs].[STP_SetError] @OperationRunId, @ErrorNumber, @ErrorSeverity, @ErrorState, @ErrorProcedure, @ErrorLine, @ErrorMessage;
+		
+		-- Raiserror to the application
+		RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+
 		RETURN 1
 	END CATCH
 END;

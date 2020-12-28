@@ -3,7 +3,7 @@
 	Table's data:		[Master] schema, [Logs] schema
 	Short description:	Launches procedures for seeding data into tables, logging & error handling of the operation
 	Created on:			2020-12-03
-	Modified on:		2020-12-17
+	Modified on:		2020-12-24
 	Scripted by:		SOFTSERVE\alevc
 */
 -- ===================================================================================================================================================
@@ -14,8 +14,6 @@ BEGIN
 	SET NOCOUNT ON;
 
 	DECLARE @OperationRunId INT,
-		@AffectedRows INT,
-		@TotalAffectedRows INT = 0,
 		@ProcExecString NVARCHAR(MAX),
 		@ProcName VARCHAR(255),
 		@Counter INT = 1,
@@ -61,32 +59,44 @@ BEGIN
 				('STP_UpdateEndVersions');
 		SET @NumberOfProcs = (SELECT COUNT(ProcName) FROM #SeedingProcedures);
 
+		-- Log the event
+		DECLARE @Message VARCHAR(MAX) = CONCAT('Preparation to operation run No ', CAST(@OperationRunId AS VARCHAR(6)), ' has been completed; starting operation run');
+		EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
+			@CallingProc = @@PROCID,
+			@Message = @Message;
+
 		BEGIN TRAN
 			-- Run data seeding procedures one by one to populate tables with dummy data
 			WHILE @Counter <= @NumberOfProcs
 			BEGIN
 				SET @ProcName = (SELECT ProcName FROM #SeedingProcedures WHERE SeedingProcedureId = @Counter);
-				SET @ProcExecString = N'EXEC @SuccessStatus = [DataSeeding].' + QUOTENAME(@ProcName) + ' @OperationRunId, @AffectedRows OUTPUT;'
+				SET @ProcExecString = N'EXEC @SuccessStatus = [DataSeeding].' + QUOTENAME(@ProcName) + ' @OperationRunId;'
 
 				EXEC sp_executesql @ProcExecString,
-					N'@SuccessStatus INT OUTPUT, @OperationRunId INT, @AffectedRows INT OUTPUT',
+					N'@SuccessStatus INT OUTPUT, @OperationRunId INT',
 					@SuccessStatus = @SuccessStatus OUTPUT,
-					@OperationRunId = @OperationRunId,
-					@AffectedRows = @AffectedRows OUTPUT;
+					@OperationRunId = @OperationRunId;
 
 				IF @SuccessStatus = 1
 					RAISERROR('Procedure [DataSeeding].%s failed. Operation has been interrupted', 12, 30, @ProcName);
 		
-				SET @TotalAffectedRows += ISNULL(@AffectedRows, 0);
 				SET @Counter += 1;
 			END;
 
 			-- Drop the temporary list of data seeding procedures
 			DROP TABLE #SeedingProcedures;
 
+			-- Log the event
+			SET @Message = CONCAT('Operation run No ', CAST(@OperationRunId AS VARCHAR(6)), ' has been completed');
+			EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
+				@CallingProc = @@PROCID,
+				@Message = @Message;
+		
+			IF @SuccessStatus = 1
+				RAISERROR('Event logging has failed. Order has not been recorded', 12, 15);
+
 			-- Log successful operation completion
 			EXEC @SuccessStatus = [Logs].[STP_CompleteOperation] @OperationRunId = @OperationRunId,
-				@AffectedRows = @TotalAffectedRows,
 				@Message = 'Tables have been succefully populated with dummy data.';
 		
 			IF @SuccessStatus = 1

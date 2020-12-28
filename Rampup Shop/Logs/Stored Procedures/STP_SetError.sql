@@ -3,7 +3,7 @@
 	Table's data:		[Logs].[Errors]
 	Short description:	Records error details
 	Created on:			2020-12-02
-	Modified on:		2020-12-04
+	Modified on:		2020-12-24
 	Scripted by:		SOFTSERVE\alevc
 */
 -- ===================================================================================================================================================
@@ -22,7 +22,7 @@ BEGIN
 
 	BEGIN TRY
 		-- Log the error
-		INSERT INTO [Logs].[Errors] (OperationRunId, Number, Severity, State, CallingProc, Line, Message, DateTime)
+		INSERT INTO [Logs].[Errors] (OperationRunId, Number, Severity, State, Process, Line, Message, DateTime)
 			VALUES (@OperationRunId, @Number, @Severity, @State, @CallingProc, @Line, @Message, CURRENT_TIMESTAMP);
 		RETURN 0
 	END TRY
@@ -36,6 +36,10 @@ BEGIN
 		
 		-- Log the error
 		EXEC [Logs].[STP_SetError] @OperationRunId, @ErrorNumber, @ErrorSeverity, @ErrorState, @ErrorProcedure, @ErrorLine, @ErrorMessage;
+		
+		-- Raiserror to the application
+		RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+		
 		RETURN 1
 	END CATCH
 END;

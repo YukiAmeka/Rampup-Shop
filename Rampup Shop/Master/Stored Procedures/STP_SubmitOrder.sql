@@ -3,7 +3,7 @@
 	Table's data:		[Master].[Orders], [Master].[OrderedProducts], [Master].[Versions], [Master].[ProductStocks]
 	Short description:	Record a customer order
 	Created on:			2020-12-11
-	Modified on:		2020-12-17
+	Modified on:		2020-12-24
 	Scripted by:		SOFTSERVE\alevc
 */
 -- ===================================================================================================================================================
@@ -73,9 +73,8 @@ BEGIN
 		IF @UnavailableProducts IS NOT NULL
 			RAISERROR('The order cannot be completed, as %s are unavailable', 12, 50, @UnavailableProducts);
 
-		BEGIN TRAN
-			-- Log the event
-			SET @Message = 'Recording the input order';
+		-- Log the event
+			SET @Message = CONCAT('Preparation to operation run No ', CAST(@OperationRunId AS VARCHAR(6)), ' has been completed; starting operation run');
 			EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
 				@CallingProc = @@PROCID,
 				@Message = @Message;
@@ -83,6 +82,7 @@ BEGIN
 			IF @SuccessStatus = 1
 				RAISERROR('Event logging has failed. Order has not been recorded', 12, 50);
 
+		BEGIN TRAN
 			-- Record the input order
 			INSERT INTO [Master].[Orders] (OrderDate, ShipDate, CustomerId, AddressId, OrderStatusId, ShipMethodId, EmployeeId)
 				VALUES (CAST (CURRENT_TIMESTAMP AS DATE), NULL, @CustomerId, @AddressId, 1, IIF(@AddressId IS NULL, 2, 1), @EmployeeId);
@@ -92,9 +92,10 @@ BEGIN
 			SET @AffectedRows = @@ROWCOUNT;
 		
 			-- Log the event
-			SET @Message = 'Recording the items that belong to the order';
+			SET @Message = '1) Recording the input order in table [Master].[Orders]';
 			EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
 				@CallingProc = @@PROCID,
+				@AffectedRows = @AffectedRows,
 				@Message = @Message;
 		
 			IF @SuccessStatus = 1
@@ -111,12 +112,13 @@ BEGIN
 				FROM STRING_SPLIT(@OrderedProducts, ',');
 		
 			-- Increment the number of affected rows
-			SET @AffectedRows += @@ROWCOUNT;
+			SET @AffectedRows = @@ROWCOUNT;
 
 			-- Log the event
-			SET @Message = 'Creating a new version';
+			SET @Message = '2) Recording the items that belong to the order in table [Master].[OrderedProducts]';
 			EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
 				@CallingProc = @@PROCID,
+				@AffectedRows = @AffectedRows,
 				@Message = @Message;
 		
 			IF @SuccessStatus = 1
@@ -128,12 +130,13 @@ BEGIN
 			SET @NewVersion = SCOPE_IDENTITY();
 
 			-- Increment the number of affected rows
-			SET @AffectedRows += @@ROWCOUNT;
+			SET @AffectedRows = @@ROWCOUNT;
 
 			-- Log the event
-			SET @Message = 'Marking product items as sold';
+			SET @Message = '3) Creating a new version in table [Master].[Versions]';
 			EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
 				@CallingProc = @@PROCID,
+				@AffectedRows = @AffectedRows,
 				@Message = @Message;
 		
 			IF @SuccessStatus = 1
@@ -147,11 +150,29 @@ BEGIN
 					WHERE OrderId = @OrderId);
 
 			-- Increment the number of affected rows
-			SET @AffectedRows += @@ROWCOUNT;
+			SET @AffectedRows = @@ROWCOUNT;
+
+			-- Log the event
+			SET @Message = '4) Marking product items as sold in table [Master].[ProductStocks]';
+			EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
+				@CallingProc = @@PROCID,
+				@AffectedRows = @AffectedRows,
+				@Message = @Message;
+		
+			IF @SuccessStatus = 1
+				RAISERROR('Event logging has failed. Order has not been recorded', 12, 50);
+
+			-- Log the event
+			SET @Message = CONCAT('Operation run No ', CAST(@OperationRunId AS VARCHAR(6)), ' has been completed');
+			EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
+				@CallingProc = @@PROCID,
+				@Message = @Message;
+		
+			IF @SuccessStatus = 1
+				RAISERROR('Event logging has failed. Order has not been recorded', 12, 50);
 
 			-- Log successful operation completion
 			EXEC @SuccessStatus = [Logs].[STP_CompleteOperation] @OperationRunId = @OperationRunId,
-				@AffectedRows = @AffectedRows,
 				@Message = 'New customer order has been successfully created.';
 		
 			IF @SuccessStatus = 1
@@ -174,7 +195,7 @@ BEGIN
 		EXEC [Logs].[STP_SetError] @OperationRunId, @ErrorNumber, @ErrorSeverity, @ErrorState, @ErrorProcedure, @ErrorLine, @ErrorMessage;
 		
 		-- Log operation failure
-		EXEC [Logs].[STP_FailOperation] @OperationRunId, 'Order creation has failed';
+		EXEC [Logs].[STP_FailOperation] @OperationRunId, 'Order creation has failed.';
 
 		-- Raiserror to the application
 		RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);

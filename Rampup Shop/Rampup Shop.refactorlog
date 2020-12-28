@@ -28,4 +28,11 @@
     <Property Name="ParentElementType" Value="SqlTable" />
     <Property Name="NewName" Value="EventId" />
   </Operation>
+  <Operation Name="Rename Refactor" Key="79bec9d4-c0b5-4d61-9983-73a3c2de9bcb" ChangeDateTime="12/28/2020 06:45:12">
+    <Property Name="ElementName" Value="[Logs].[Errors].[CallingProc]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[Logs].[Errors]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="Process" />
+  </Operation>
 </Operations>

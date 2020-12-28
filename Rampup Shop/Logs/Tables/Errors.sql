@@ -5,7 +5,7 @@
     [Number] INT NULL, 
     [Severity] INT NULL, 
     [State] INT NULL, 
-    [CallingProc] VARCHAR(255) NULL, 
+    [Process] VARCHAR(255) NULL, 
     [Line] INT NULL, 
     [Message] NVARCHAR(MAX) NULL, 
     [DateTime] DATETIME NOT NULL,

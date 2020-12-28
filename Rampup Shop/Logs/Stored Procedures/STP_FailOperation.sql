@@ -3,7 +3,7 @@
 	Table's data:		[Logs].[OperationRuns]
 	Short description:	Records a failure of a previously started operation
 	Created on:			2020-12-02
-	Modified on:		2020-12-04
+	Modified on:		2020-12-24
 	Scripted by:		SOFTSERVE\alevc
 */
 -- ===================================================================================================================================================
@@ -22,18 +22,16 @@ BEGIN
 		-- Log operation failure
 		UPDATE [Logs].[OperationRuns]
 			SET Status = 'Failure',
-				AffectedRows = 0,
-				Message = CONCAT(Message, @Message)
+				Message = CONCAT(@Message, ' ', 'For more details, run SELECT * FROM [Logs].[Errors] WHERE OperationRunId = ', CAST(@OperationRunId AS VARCHAR(6)))
 			WHERE OperationRunId = @OperationRunId;
 		
 		-- Print runtime message to the user if any
-		IF @Message IS NOT NULL
-			PRINT @Message;
+		PRINT CONCAT('Operation run has failed. For more details, run SELECT * FROM [Logs].[Errors] WHERE OperationRunId = ', CAST(@OperationRunId AS VARCHAR(6)));
 		RETURN 0
 	END TRY
 	BEGIN CATCH
 		-- Produce a qualified name of the calling procedure based on the record in [Logs].[OperationRuns]
-		DECLARE @CallingProcFullName VARCHAR(255) = (SELECT CallingProc FROM [Logs].[OperationRuns] WHERE OperationRunId = @OperationRunId);
+		DECLARE @CallingProcFullName VARCHAR(255) = (SELECT Process FROM [Logs].[OperationRuns] WHERE OperationRunId = @OperationRunId);
 		
 		DECLARE @ErrorNumber INT = ERROR_NUMBER(), 
 			@ErrorSeverity INT = ERROR_SEVERITY(), 
@@ -44,6 +42,10 @@ BEGIN
 		
 		-- Log the error
 		EXEC [Logs].[STP_SetError] @OperationRunId, @ErrorNumber, @ErrorSeverity, @ErrorState, @ErrorProcedure, @ErrorLine, @ErrorMessage;
+		
+		-- Raiserror to the application
+		RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+		
 		RETURN 1
 	END CATCH
 END;
