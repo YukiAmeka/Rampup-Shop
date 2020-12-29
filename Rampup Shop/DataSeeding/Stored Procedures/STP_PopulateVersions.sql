@@ -29,6 +29,7 @@ BEGIN
 			DECLARE @StartDate DATE = '2020-01-05', 
 				@EndDate DATE = DATEADD(d, -1, CAST(CURRENT_TIMESTAMP AS DATE));
 
+			-- Generate all dates between @StartDate and today
 			WITH Calendar 
 			AS (
 				SELECT DATEADD(d, n-1, @StartDate) AS VersionDate
@@ -37,6 +38,7 @@ BEGIN
 						ROW_NUMBER() OVER (ORDER BY [object_id]) AS n
 					FROM sys.all_objects) AS Numbers
 			)
+			-- Create versions for all orders (150 per workday; details updated later) and 1 resupply on Sunday
 			INSERT INTO [Master].[Versions] (OperationRunId, VersionDate, VersionDetails)
 			SELECT @OperationRunId, VersionDate, 'Products weekly resupply'
 			FROM Calendar

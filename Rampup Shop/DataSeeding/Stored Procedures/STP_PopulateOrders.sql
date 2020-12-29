@@ -29,6 +29,7 @@ BEGIN
 			DECLARE @StartDate DATE = '2020-01-05', 
 				@EndDate DATE = DATEADD(d, -1, CAST(CURRENT_TIMESTAMP AS DATE));
 
+			-- Generate all dates between @StartDate and today
 			WITH Calendar 
 			AS (
 				SELECT DATEADD(d, n-1, @StartDate) AS OrderDate
@@ -38,12 +39,14 @@ BEGIN
 					FROM sys.all_objects) AS Numbers
 			), PickedCustomers
 			AS (
+				-- Get an address for each customer that has one on record
 				SELECT MC.CustomerId, MAX(MCA.AddressId) AS AddressId
 				FROM Master.Customers AS MC
 				LEFT JOIN Master.CustomerAddresses AS MCA ON MC.CustomerId = MCA.CustomerId
 				LEFT JOIN Master.Addresses AS MA ON MCA.AddressId = MA.AddressId
 				GROUP BY MC.CustomerId
 			)
+			-- Generate 1 order (all details except ordered products) for each customer per day except Sunday
 			INSERT INTO [Master].[Orders] (OrderDate, ShipDate, CustomerId, AddressId, OrderStatusId, ShipMethodId, EmployeeId)
 			SELECT OrderDate, 
 				CASE

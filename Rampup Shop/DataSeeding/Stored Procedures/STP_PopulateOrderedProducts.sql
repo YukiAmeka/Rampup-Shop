@@ -26,6 +26,7 @@ BEGIN
 		-- Populate only an empty table:
 		IF NOT EXISTS (SELECT TOP 1 * FROM [Master].[OrderedProducts])
 		BEGIN
+			-- Unpivot schedule to get which products each group of customers buys at which days
 			WITH Schedule
 			AS (
 				SELECT ProductDetailId, 
@@ -50,6 +51,7 @@ BEGIN
 				) AS Unpvt
 			), OPD
 			AS (
+				-- Fit customers with their scheduled days and orders made on the corresponding dates
 				SELECT O.OrderId, O.OrderDate, S.ProductDetailId,
 					ROW_NUMBER() OVER (PARTITION BY ProductDetailId ORDER BY OrderDate) AS ProductOrder
 				FROM Schedule AS S
@@ -58,6 +60,7 @@ BEGIN
 				JOIN Master.Orders AS O ON DATENAME(dw, OrderDate) = value
 					AND C.CustomerId = O.CustomerId
 			)
+			-- Find individual products in stocks for each order
 			INSERT INTO [Master].[OrderedProducts] (OrderId, ProductStockId)
 			SELECT OrderId, ProductStockId FROM OPD
 			JOIN (SELECT ProductStockId, 

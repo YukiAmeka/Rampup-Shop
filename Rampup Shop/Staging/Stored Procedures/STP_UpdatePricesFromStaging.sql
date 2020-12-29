@@ -10,13 +10,13 @@
 
 CREATE PROCEDURE [Staging].[STP_UpdatePricesFromStaging]
 	@OperationRunId INT = NULL,
-	@Message VARCHAR(MAX) = NULL OUTPUT
+	@Message VARCHAR(MAX) = NULL OUTPUT,
+	@NewVersion INT = NULL OUTPUT
 AS
 BEGIN
 	SET NOCOUNT ON;
 
 	DECLARE @SuccessStatus INT,
-		@NewVersion INT,
 		@AffectedRows INT;
 
 	BEGIN TRY
@@ -25,31 +25,24 @@ BEGIN
 
 		IF NOT EXISTS (SELECT TOP 1 * FROM [Staging].[ProductPrices])
 		BEGIN
-			-- Set operation message
-			SET @Message = 'Table [Staging].[ProductPrices] is empty.';
+			SET @Message = '-- Table [Staging].[ProductPrices] is empty.';
 			RETURN 0
 		END;
 
 		IF NOT EXISTS (SELECT TOP 1 * FROM [Master].[ProductStocks] AS PS
-		JOIN [Staging].[ProductPrices] AS PP ON PS.ProductDetailId = PP.ProductPriceId
-			WHERE PS.Price <> PP.Price
+		JOIN (SELECT *,
+				MAX(ModifiedDateTime) OVER (PARTITION BY ProductPriceId, Name) AS LatestEntry
+			FROM [Staging].[ProductPrices]
+		) AS PP ON PS.ProductDetailId = PP.ProductPriceId
+		WHERE PP.ModifiedDateTime = PP.LatestEntry
+			AND PS.Price <> PP.Price
 			AND PS.EndVersion = 999999999)
 		BEGIN
-			-- Set operation message
-			SET @Message = 'Prices contained in table [Staging].[ProductPrices] are no different from ones on record';
+			SET @Message = '-- Prices contained in table [Staging].[ProductPrices] are no different from ones on record';
 			RETURN 0
 		END;
 
 		BEGIN TRAN
-			-- Log the event
-			SET @Message = 'Creating a new version';
-			EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
-				@CallingProc = @@PROCID,
-				@Message = @Message;
-		
-			IF @SuccessStatus = 1
-				RAISERROR('Event logging has failed. Prices have not been updated', 12, 60);
-
 			-- Create new version
 			INSERT INTO [Master].[Versions] (OperationRunId, VersionDate, VersionDetails)
 				VALUES (@OperationRunId, CAST (CURRENT_TIMESTAMP AS DATE), 'Product price change');
@@ -59,54 +52,76 @@ BEGIN
 			SET @AffectedRows = @@ROWCOUNT;
 
 			-- Log the event
-			SET @Message = 'Creating records with new prices in [Master].[ProductStocks]';
+			SET @Message = '3.1) Creating a new version';
 			EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
 				@CallingProc = @@PROCID,
-				@Message = @Message;
-		
+				@AffectedRows = @AffectedRows,
+				@Message = @Message;		
 			IF @SuccessStatus = 1
 				RAISERROR('Event logging has failed. Prices have not been updated', 12, 60);
 
 			-- Copy records for unsold items with new prices and start version
+			WITH PP
+			AS (
+				SELECT ProductPriceId,
+					Name,
+					Price,
+					ModifiedDateTime,
+					MAX(ModifiedDateTime) OVER (PARTITION BY ProductPriceId, Name) AS LatestEntry
+				FROM [Staging].[ProductPrices]
+			)
 			INSERT INTO [Master].[ProductStocks] (ProductDetailId, Price, StartVersion, EndVersion)
 			SELECT PS.ProductDetailId, PP.Price, @NewVersion, 999999999 
 			FROM [Master].[ProductStocks] AS PS
-			JOIN [Staging].[ProductPrices] AS PP ON PS.ProductDetailId = PP.ProductPriceId
-				WHERE PS.Price <> PP.Price
+			JOIN PP ON PS.ProductDetailId = PP.ProductPriceId
+			WHERE PP.ModifiedDateTime = PP.LatestEntry
+				AND PS.Price <> PP.Price
 				AND PS.EndVersion = 999999999
 
-			--SELECT TOP (1000) [ProductPriceId]
-			--  ,[Name]
-			--  ,[Price]
-			--  ,[ModifiedDateTime]
-			--  ,MAX([ModifiedDateTime]) OVER (PARTITION BY [ProductPriceId], [Name]) AS LatestEntry
-		 -- FROM [Ramp Shop].[Staging].[ProductPrices]
-
 			-- Increment the number of affected rows
-			SET @AffectedRows += @@ROWCOUNT;
+			SET @AffectedRows = @@ROWCOUNT;
 
 			-- Log the event
-			SET @Message = 'Closing end version for retired records in [Master].[ProductStocks]';
+			SET @Message = '3.2) Creating records with new prices in [Master].[ProductStocks]';
 			EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
 				@CallingProc = @@PROCID,
-				@Message = @Message;
-		
+				@AffectedRows = @AffectedRows,
+				@Message = @Message;		
 			IF @SuccessStatus = 1
 				RAISERROR('Event logging has failed. Prices have not been updated', 12, 60);
 
 			-- Close end version for retired records of unsold items
+			WITH PP
+			AS (
+				SELECT ProductPriceId,
+					Name,
+					Price,
+					ModifiedDateTime,
+					MAX(ModifiedDateTime) OVER (PARTITION BY ProductPriceId, Name) AS LatestEntry
+				FROM [Staging].[ProductPrices]
+			)
 			UPDATE [Master].[ProductStocks]
 			SET EndVersion = @NewVersion
 			FROM [Master].[ProductStocks] AS PS
-			JOIN [Staging].[ProductPrices] AS PP ON PS.ProductDetailId = PP.ProductPriceId
-				WHERE PS.Price <> PP.Price
+			JOIN PP ON PS.ProductDetailId = PP.ProductPriceId
+			WHERE PP.ModifiedDateTime = PP.LatestEntry
+				AND PS.Price <> PP.Price
 				AND PS.EndVersion = 999999999
 
 			-- Increment the number of affected rows
-			SET @AffectedRows += @@ROWCOUNT;
+			SET @AffectedRows = @@ROWCOUNT;
+
+			-- Log the event
+			SET @Message = '3.3) Closing end version for retired records in [Master].[ProductStocks]';
+			EXEC @SuccessStatus = [Logs].[STP_SetEvent] @OperationRunId = @OperationRunId,
+				@CallingProc = @@PROCID,
+				@AffectedRows = @AffectedRows,
+				@Message = @Message;		
+			IF @SuccessStatus = 1
+				RAISERROR('Event logging has failed. Prices have not been updated', 12, 60);
 
 			-- Set operation message
-			SET @Message = 'Prices have been successfully updated.';
+			SET @Message = '-- Prices have been successfully updated.';
 		COMMIT TRAN
 		RETURN 0
 	END TRY
