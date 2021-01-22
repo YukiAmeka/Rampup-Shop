@@ -35,4 +35,11 @@
     <Property Name="ParentElementType" Value="SqlTable" />
     <Property Name="NewName" Value="Process" />
   </Operation>
+  <Operation Name="Rename Refactor" Key="9d7f9bed-484f-4a2e-aca1-62f6ce12d43f" ChangeDateTime="01/21/2021 22:29:14">
+    <Property Name="ElementName" Value="[Config].[UploadParameters].[FormatFile]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[Config].[UploadParameters]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="FormatFilePath" />
+  </Operation>
 </Operations>

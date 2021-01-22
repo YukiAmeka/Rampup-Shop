@@ -63,7 +63,8 @@ BEGIN
 					AND Calendar.OrderDate BETWEEN DateHired AND DateFired) AS EmployeeId
 			FROM Calendar
 			CROSS JOIN Master.Customers AS MC
-			LEFT JOIN PickedCustomers AS PC ON MC.CustomerId = PC.CustomerId
+			LEFT JOIN PickedCustomers AS PC 
+				ON MC.CustomerId = PC.CustomerId
 			WHERE DATENAME(dw, OrderDate) <> 'Sunday'
 			ORDER BY OrderDate;
 			

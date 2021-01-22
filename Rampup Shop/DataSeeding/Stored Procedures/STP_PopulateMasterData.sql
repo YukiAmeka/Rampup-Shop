@@ -56,7 +56,8 @@ BEGIN
 				('STP_PopulateVersions'),
 				('STP_PopulateProductStocks'),
 				('STP_PopulateOrderedProducts'),
-				('STP_UpdateEndVersions');
+				('STP_UpdateEndVersions'),
+				('STP_PopulateConfig');
 		SET @NumberOfProcs = (SELECT COUNT(ProcName) FROM #SeedingProcedures);
 
 		-- Log the event
